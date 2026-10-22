@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How FloodSAHAAY Works — Real-Time Flood Intelligence</title>
+  <link rel="icon" type="image/png" href="../assets/limitlez-favicon.png">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 2rem;
+      position: relative;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    .step-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .step-num {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--bg-dark);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      margin-bottom: 1.25rem;
+    }
+    .flow-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.9rem;
+      background: #EAE7E1;
+      border-radius: var(--radius-full);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header-nav">
+    <div class="logo">
+      <div class="logo-icon">~</div>
+      <span>FloodSAHAAY</span>
+    </div>
+
+    <div class="nav-right">
+      <a href="../index.html" class="btn btn-secondary btn-sm">← Back to Home</a>
+      <a href="dashboard.html" class="btn btn-primary btn-sm">Explore Dashboard →</a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section style="padding: 2.5rem 1.25rem 2rem; text-align: center; max-width: 840px; margin: 0 auto;">
+    <div style="display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+      <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-orange);"></span>
+      <span class="label-caps" style="color: var(--accent-orange-hover);">HOW IT WORKS</span>
+    </div>
+
+    <h1 class="heading-xl" style="font-weight: 800; margin-bottom: 1.25rem;">
+      How FloodSAHAAY Protects Communities
+    </h1>
+
+    <p style="font-size: 1.05rem; color: var(--text-secondary); line-height: 1.6; max-width: 680px; margin: 0 auto 2rem;">
+      FloodSAHAAY uses live weather data, soil moisture tracking, and automatic emergency alerts to warn you about floods in your area.
+    </p>
+
+    <!-- Visual Flow Ribbon -->
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.5rem; background: var(--bg-card); padding: 0.85rem 1rem; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+      <span class="flow-badge">📍 Location</span>
+      <span style="color: var(--text-muted);">→</span>
+      <span class="flow-badge">📡 Weather Data</span>
+      <span style="color: var(--text-muted);">→</span>
+      <span class="flow-badge">📊 Risk Calculator</span>
+      <span style="color: var(--text-muted);">→</span>
+      <span class="flow-badge">🗺️ Interactive Map</span>
+      <span style="color: var(--text-muted);">→</span>
+      <span class="flow-badge">🚨 Emergency Alert</span>
+    </div>
+  </section>
+
+  <!-- 6 Step Process Grid -->
+  <section style="max-width: 1100px; margin: 0 auto 4rem; padding: 0 1.25rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 1.25rem;">
+
+      
+      <!-- Step 1 -->
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3 class="heading-md" style="margin-bottom: 0.5rem;">Select & Monitor Location</h3>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.55;">
+          Search for any city or area. FloodSAHAAY pinpoints your location to track flood risk right where you are.
+        </p>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3 class="heading-md" style="margin-bottom: 0.5rem;">Live Weather Updates</h3>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.55;">
+          We pull current rainfall, temperature, wind, and soil moisture data from live weather sources — updated every few seconds.
+        </p>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3 class="heading-md" style="margin-bottom: 0.5rem;">Flood Risk Score</h3>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.55;">
+          We combine how much it's raining (45%), how fast it's raining (30%), and how soaked the ground is (25%) into a simple 0–100 score: Low, Moderate, High, or Critical.
+        </p>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <h3 class="heading-md" style="margin-bottom: 0.5rem;">Live Flood Map</h3>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.55;">
+          The map shows danger zones, nearby shelters, and how full each shelter is — all in real time.
+        </p>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="step-card">
+        <div class="step-num">5</div>
+        <h3 class="heading-md" style="margin-bottom: 0.5rem;">Alerts & Warning Notices</h3>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.55;">
+          When rain gets dangerously heavy, you'll get a flood alert and directions to the nearest safe shelter.
+        </p>
+      </div>
+
+      <!-- Step 6 -->
+      <div class="step-card">
+        <div class="step-num">6</div>
+        <h3 class="heading-md" style="margin-bottom: 0.5rem;">Emergency Contact & SOS Network</h3>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.55;">
+          Press and hold the SOS button to instantly share your live location with your emergency contacts.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section style="background: var(--bg-dark); color: #fff; padding: 4rem 1.5rem; text-align: center;">
+    <h2 class="heading-lg" style="color: #fff; margin-bottom: 1rem;">Ready to monitor your local flood risk?</h2>
+    <p style="color: #aaa; font-size: 1.05rem; margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto;">
+      Get live flood alerts and emergency tools — ready when you need them.
+    </p>
+    <a href="dashboard.html" class="btn" style="background: var(--accent-orange); color: #fff; padding: 0.9rem 2rem; font-size: 1rem; border-radius: var(--radius-sm);">Launch Live Dashboard →</a>
+  </section>
+
+  <script src="../js/services/api.js"></script>
+  <script src="../js/services/auth.service.js"></script>
+</body>
+</html>
