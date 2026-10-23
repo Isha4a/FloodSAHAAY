@@ -28,6 +28,8 @@ const sosRoutes = require('./routes/sos.routes');
 const contactsRoutes = require('./routes/contacts.routes');
 const sheltersRoutes = require('./routes/shelters.routes');
 const notificationsRoutes = require('./routes/notifications.routes');
+const donationRoutes = require('./routes/donation.routes');
+
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
@@ -39,6 +41,8 @@ app.use('/api/sos', sosRoutes);
 app.use('/api/contacts', contactsRoutes);
 app.use('/api/shelters', sheltersRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/donations', donationRoutes);
+
 
 // Health Check
 app.get('/api/health', (req, res) => {
