@@ -3,70 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign In — FloodSAHAAY</title>
+  <title>Sign in — FloodSAHAAY</title>
   <link rel="icon" type="image/png" href="../assets/limitlez-favicon.png">
   <link rel="stylesheet" href="../css/base.css">
   <link rel="stylesheet" href="../css/components.css">
   <link rel="stylesheet" href="../css/layout.css">
   <link rel="stylesheet" href="../css/auth.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/premium.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="auth-rebuild">
   <div class="split-layout">
-    <!-- Left Dark Panel -->
-    <div class="auth-brand-panel">
-      <div class="brand-header">
-        <div class="logo">
-          <div class="logo-icon">~</div>
-          <span style="color: white;">FloodSAHAAY</span>
-        </div>
-      </div>
+    <section class="auth-brand-panel">
+      <a href="../index.html" class="logo brand-header" aria-label="FloodSAHAAY home">
+        <div class="logo-icon">~</div>
+        <span class="brand-mark"><strong style="color:#f4fffb;">FloodSAHAAY</strong><small>live water intelligence</small></span>
+      </a>
+
       <div class="brand-content">
-        <span class="label-caps" style="color: #888;">REAL-TIME FLOOD INTELLIGENCE</span>
-        <h1 class="heading-xl" style="color: white; margin: 1rem 0;">Know the risk before the water rises.</h1>
-        <p style="color: #aaa; font-size: 1rem;">
-          Track flood risk <span style="color: #4A9B6E;">in your area</span>, get <span style="color: #D46B2A;">live alerts</span>, and keep your family connected in emergencies.
-        </p>
+        <div class="eyebrow light">Real-time flood intelligence / sign in</div>
+        <h1>Know the risk before the water rises.</h1>
+        <p>Track your area, read the signal, and keep your people within reach when conditions change.</p>
+        <div class="auth-signal"><span class="auth-signal-orb"></span><span><strong>HYDRO-MET SIGNAL ONLINE</strong><small>Live rainfall and ground conditions are ready to monitor.</small></span></div>
       </div>
-      <div class="brand-footer">
-        <p style="color: #666; font-size: 0.8rem;">© 2026 FloodSAHAAY by LimitLEZ</p>
-      </div>
-    </div>
 
-    <!-- Right Form Panel -->
-    <div class="auth-form-panel">
+      <div class="brand-footer"><p style="color:rgba(231,249,242,.46);font-size:.72rem;">© 2026 FloodSAHAAY by LimitLEZ</p></div>
+    </section>
+
+    <section class="auth-form-panel">
       <div class="auth-card">
-        <h2 class="heading-lg">Welcome back</h2>
-        <p class="subtext" style="margin-bottom: 2rem;">Monitor your area. Protect your people.</p>
+        <div class="eyebrow">Secure field access / 01</div>
+        <h2>Welcome back.</h2>
+        <p class="subtext" style="margin-bottom:2rem;">Open your monitoring workspace.</p>
 
-        <div id="error-message" class="error-banner" style="display: none;"></div>
+        <div id="error-message" class="error-banner" style="display:none;"></div>
 
         <form id="signin-form">
-          <div class="form-group">
-            <label class="form-label" for="email">Email</label>
-            <input type="email" id="email" class="form-input" placeholder="you@example.com" required>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="password">Password</label>
-            <div class="form-input-wrapper">
-              <input type="password" id="password" class="form-input" placeholder="••••••••" required>
-              <button type="button" id="toggle-password" class="input-toggle-btn">Show</button>
-            </div>
-          </div>
-
-          <button type="submit" id="submit-btn" class="btn btn-primary btn-full" style="margin-top: 1rem;">Sign in</button>
+          <div class="form-group"><label class="form-label" for="email">Email address</label><input type="email" id="email" class="form-input" placeholder="you@example.com" required></div>
+          <div class="form-group"><label class="form-label" for="password">Password</label><div class="form-input-wrapper"><input type="password" id="password" class="form-input" placeholder="Enter your password" required><button type="button" id="toggle-password" class="input-toggle-btn">Show</button></div></div>
+          <button type="submit" id="submit-btn" class="btn tide-button dark btn-full">Enter command center <span aria-hidden="true">↗</span></button>
         </form>
 
         <div class="divider"><span>or</span></div>
-
-        <a href="register.html" class="btn btn-secondary btn-full">Create account</a>
-
-        <p class="privacy-note">
-          Your data is private and used only for your safety.
-        </p>
+        <a href="register.html" class="btn tide-button ghost btn-full">Create a new safety layer</a>
+        <p class="privacy-note">Your data is private and used only for your safety.</p>
       </div>
-    </div>
+    </section>
   </div>
 
   <script src="../js/services/api.js"></script>
