@@ -404,22 +404,47 @@ async function _executeSeed() {
 
     console.log('[SEED] In-memory demo data loaded successfully.');
 
-    // If MongoDB is connected, also seed MongoDB if empty
-    if (isDbConnected()) {
-      const userCount = await User.countDocuments();
-      if (userCount === 0) {
-        console.log('[SEED] Seeding MongoDB with initial demo data...');
-        await User.insertMany(demoUsers);
-        await Shelter.insertMany(demoShelters);
-        await FloodReport.insertMany(demoReports);
-        await SOSEvent.insertMany(demoSOSEvents);
-        await SafetyCheckin.insertMany(demoCheckins);
-        await VolunteerProfile.insertMany(demoVolunteers);
-        await HelpRequest.insertMany(demoHelpRequests);
-        await DamageReport.insertMany(demoDamageReports);
-        await IncidentLog.insertMany(demoIncidentLogs);
-        console.log('[SEED] MongoDB demo data seeded successfully.');
+    // Strip custom string _id fields — Mongoose will auto-generate ObjectIds
+    const stripId = (arr) => arr.map(({ _id, ...rest }) => rest);
+
+    // Wait for MongoDB to become ready (Render may connect asynchronously)
+    const waitForDb = async (maxWaitMs = 15000) => {
+      const start = Date.now();
+      while (!isDbConnected() && Date.now() - start < maxWaitMs) {
+        await new Promise(r => setTimeout(r, 500));
       }
+      return isDbConnected();
+    };
+
+    if (await waitForDb()) {
+      try {
+        const demoAdmin = await User.findOne({ email: 'admin@floodsahaay.local' });
+        if (!demoAdmin) {
+          // Remove any stale/broken demo data from a previous failed seed
+          const userCount = await User.countDocuments();
+          if (userCount > 0) {
+            console.log(`[SEED] Found ${userCount} user(s) but no demo admin — clearing stale data for fresh seed...`);
+            await User.deleteMany({ email: { $regex: /@floodsahaay\.local$/ } });
+          }
+          console.log('[SEED] Seeding MongoDB with initial demo data...');
+          await User.insertMany(stripId(demoUsers));
+          await Shelter.insertMany(stripId(demoShelters)).catch(() => {});
+          await FloodReport.insertMany(stripId(demoReports)).catch(() => {});
+          await SOSEvent.insertMany(stripId(demoSOSEvents)).catch(() => {});
+          await SafetyCheckin.insertMany(stripId(demoCheckins)).catch(() => {});
+          await VolunteerProfile.insertMany(stripId(demoVolunteers)).catch(() => {});
+          await HelpRequest.insertMany(stripId(demoHelpRequests)).catch(() => {});
+          await DamageReport.insertMany(stripId(demoDamageReports)).catch(() => {});
+          await IncidentLog.insertMany(stripId(demoIncidentLogs)).catch(() => {});
+          console.log('[SEED] MongoDB demo data seeded successfully.');
+        } else {
+          console.log(`[SEED] Demo admin user exists in MongoDB, skipping seed.`);
+        }
+      } catch (dbSeedErr) {
+        console.error('[SEED] MongoDB seed error:', dbSeedErr.message);
+      }
+    } else {
+      console.warn('[SEED] MongoDB not connected after waiting — running on in-memory data only.');
     }
   } catch (err) {
     console.error('[SEED ERROR]', err.message);
