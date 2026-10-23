@@ -174,6 +174,82 @@ Located in [`dashboard.html`](file:///frontend/pages/dashboard.html) and [`dashb
 
 ---
 
+## 🌟 Tier 4: Crowdsourced Ground Truth Engine
+
+### 1. ⚠️ Citizen Flood Reports (`/api/reports`)
+- **Offline-First Submission**: Reports submitted while offline are queued in `localStorage` (`floodsahaay_queued_reports`) and automatically synchronized once network connectivity resumes via the `online` event listener.
+- **Visual Evidence**: Accepts optional photo attachments (validated up to 1.5 MB data URL) providing a **+10 confidence boost**.
+- **Consensus Scoring & Decay**:
+  - Base Score: `40 points`
+  - Photo bonus: `+10 points`
+  - Nearby Confirmation: `+15 points` per local verification within 2 km
+  - Dispute penalty: `-20 points` per local dispute
+  - User Reputation Adjustment: `+10 points` for majority-verified track records, `-15 points` for majority-disputed history.
+  - Linear Time Decay: Decays smoothly over type-specific TTL (Water level: 6h, Road blocked: 12h, Need help: 3h, Bridge damaged: 8h).
+  - Anti-Spam: Shadow-rate limiting throttling users with >3 disputed reports; duplicate suppression for identical hazard types submitted within 100 meters within 15 minutes.
+
+### 2. 🗺️ Live Hazard Map & Evacuation Route Safety
+- **Visual Confidence Coding**:
+  - High Confidence (Score ≥ 70): Solid emerald border (`#10B981`)
+  - Emerging / Unverified (40–69): Dashed amber border (`#F59E0B`)
+  - Stale / Disputed (< 40): Faded grey border (`#9CA3AF`)
+- **Route Hazard Detection**: Evacuation routes to shelters perform a vector point-to-segment proximity scan. If any reported hazard lies within **150 meters** of the evacuation corridor, the dashboard displays a warning banner and styles the route polyline in caution red.
+- **Hydrologic Risk Signal**: When ≥3 verified water reports exist within 3 hours in a 10 km radius, a `crowdSignal` bonus (+5 to +15 pts) is dynamically incorporated into the calculated flood risk score.
+
+### 3. 🛡️ "I'm Safe" Check-ins & Public Tracking (`/api/checkins`, `/api/share/:token`)
+- One-tap check-in buttons (`I'm Safe`, `Evacuating`, `Need Help`) immediately update user status and notify safety circle contacts.
+- **Battery Status API Integration**: Monitors device battery level. When `< 15%` and not connected to a charger, automatically prompts the user to broadcast their last known location before shutdown.
+- **Public 24-Hour Share Link**: Generates a secure, rate-limited public tracking URL (`/pages/share.html?token=...`) allowing loved ones outside the flood zone to view live coordinates, battery level, and safety status without an account.
+
+---
+
+## 🏛️ Tier 5: Authority & Relief Operations System
+
+### 1. 👥 Multi-Role Authorization & Access Control
+User roles are authenticated via signed JWTs and enforced by `requireRole(...)` middleware:
+- `citizen`: Report hazards, check-in, request help, file damage claims.
+- `volunteer`: Set readiness status, review nearby requests, accept rescue tasks.
+- `shelter_manager`: Mobile-friendly shelter occupancy controls and supply tracking.
+- `responder`: Full triage authority, dispatch responders, view live telemetry.
+- `admin`: Full system control, role elevation, broadcast alerts, CSV export.
+
+### 2. 🚨 Command Center Dashboard (`/pages/admin.html`)
+- **Real-Time SSE Stream**: Live Server-Sent Events at `/api/admin/stream` dispatch immediate telemetry on SOS bursts, new hazard reports, volunteer claims, and shelter updates.
+- **Prioritized Triage Queue**: Unifies SOS beacons, crowd reports, and help requests with status badges, urgency levels, and full audit logging (`/api/admin/incidents/:id/logs`).
+- **Emergency Broadcasts**: Authorities can publish high-priority alerts across designated districts.
+- **Data Export**: One-click CSV export of incident records for disaster management debriefs.
+
+### 3. 🏠 Shelter Operations Manager (`/pages/shelter-manager.html`)
+- Mobile touch-optimized interface for shelter managers at evacuation grounds.
+- Fast increment/decrement touch counters (`+1`, `-1`, `+5`, `-5`).
+- Multi-resource supply status toggles (`Food`, `Water`, `Medical`, `Blankets`) with `OK`, `LOW`, and `OUT` states.
+
+### 4. 🤝 Volunteer & Help Request Dispatch Engine
+- **Vulnerability-Aware Matching**: Evaluates volunteer-request affinity using a weighted scoring formula:
+  $$\text{Score} = (\text{Skill Match} \times 0.4) + (\text{Proximity} \times 0.3) + (\text{Availability} \times 0.2) + (\text{Language} \times 0.1)$$
+- **Race-Safe Task Claiming**: Atomic acceptance checks prevent multiple volunteers from double-claiming the same urgent rescue task (returns `409 Conflict` if already claimed).
+
+### 5. 📑 Post-Flood Recovery & Health Advisory
+- **Damage Assessment Claims (`/api/damage`)**: File official compensation claims with loss estimates in INR (₹), damaged asset categories, and photo evidence.
+- **Risk-Aware Health Protocol**: Offline-accessible guidance for water purification, waterborne epidemic prevention (leptospirosis, cholera), electrical hazards, and official helplines (NDMA 1078, Emergency 112).
+
+---
+
+## 🔑 Demo Login Accounts
+
+Pre-seeded demo credentials for instant testing (Password for all: `Password123!`):
+
+| Role | Email | Password | Access Capabilities |
+| :--- | :--- | :--- | :--- |
+| **Command Admin** | `admin@floodsahaay.local` | `Password123!` | `/pages/admin.html` (Full Command Center, SSE stream, CSV export, broadcasts) |
+| **Emergency Responder** | `responder@floodsahaay.local` | `Password123!` | `/pages/admin.html` (Triage actions, dispatch teams, audit trail) |
+| **Shelter Manager** | `shelter@floodsahaay.local` | `Password123!` | `/pages/shelter-manager.html` (Live capacity meter, touch counters, supplies) |
+| **Field Volunteer (Rescue)** | `volunteer1@floodsahaay.local` | `Password123!` | Dashboard `#volunteers` tab (Readiness toggles, claim rescue tasks) |
+| **Medical Volunteer** | `volunteer2@floodsahaay.local` | `Password123!` | Dashboard `#volunteers` tab (Medical first aid dispatch) |
+| **Citizen** | `citizen@floodsahaay.local` | `Password123!` | Dashboard (Reports, Check-ins, Public Share, Recovery claims) |
+
+---
+
 ## 🚀 How to Run the Project
 
 ### Prerequisites
@@ -192,22 +268,33 @@ npm install
 Run the Express backend server:
 ```bash
 npm start
-# OR for development auto-reload:
+# OR for development:
 node server.js
 ```
 The server will start on **`http://localhost:5000`** and serve both backend REST APIs (`/api/*`) and frontend static web pages (`/frontend/*`).
 
-### Step 3: Open Application in Web Browser
+### Step 3: Run Automated Test Suites
+Run the unit test for consensus scoring and decay:
+```bash
+node backend/scripts/test-report-scoring.js
+```
+Run the end-to-end integration test suite verifying all Tier 4 & 5 routes:
+```bash
+node backend/scripts/test-e2e-tier4-tier5.js
+```
+
+### Step 4: Open Application in Web Browser
 Open your browser and navigate to:
 ```text
 http://localhost:5000/index.html
 ```
-Or open the dashboard directly:
-```text
-http://localhost:5000/pages/dashboard.html
-```
+- **Main Dashboard**: `http://localhost:5000/pages/dashboard.html`
+- **Command Center (Admin/Responder)**: `http://localhost:5000/pages/admin.html`
+- **Shelter Manager Operations**: `http://localhost:5000/pages/shelter-manager.html`
+- **Public Location Tracking**: `http://localhost:5000/pages/share.html`
 
 ---
 
 ## 🛡️ License
 Built for Smart India Hackathon (SIH) Internal Project. All rights reserved.
+

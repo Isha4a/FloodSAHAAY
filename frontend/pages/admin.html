@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authority Command Center — FloodSAHAAY</title>
+  <link rel="icon" type="image/png" href="../assets/limitlez-favicon.png">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body class="admin-body">
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Top Navigation & Stat Bar -->
+  <header class="admin-topbar">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <div class="logo" style="cursor: pointer;" onclick="window.location.href='dashboard.html'">
+        <div class="logo-icon" style="background: #DC2626;">~</div>
+        <span style="font-size: 1.15rem; font-weight: 800; letter-spacing: -0.5px;">FloodSAHAAY</span>
+      </div>
+      <span class="badge" style="background: #B91C1C; color: #FFF; font-weight: 700; font-size: 0.72rem; letter-spacing: 0.5px;">RESPONDER COMMAND</span>
+      <span id="sse-status-badge" class="badge badge-live" style="font-size: 0.7rem;"><span class="badge-dot"></span> Live Stream</span>
+    </div>
+
+    <!-- Live Stat Cards -->
+    <div class="admin-stats-grid">
+      <div class="admin-stat-card">
+        <span class="admin-stat-val" id="stat-active-sos" style="color: #EF4444;">--</span>
+        <span class="admin-stat-lbl">Active SOS</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-val" id="stat-unverified-reports" style="color: #F59E0B;">--</span>
+        <span class="admin-stat-lbl">Unverified</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-val" id="stat-verified-hazards" style="color: #10B981;">--</span>
+        <span class="admin-stat-lbl">Verified</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-val" id="stat-shelters-cap" style="color: #8B5CF6;">--</span>
+        <span class="admin-stat-lbl">Full Shelters</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-val" id="stat-volunteers" style="color: #3B82F6;">--</span>
+        <span class="admin-stat-lbl">Volunteers</span>
+      </div>
+    </div>
+
+    <!-- Action Tools -->
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <button id="btn-broadcast-modal" class="btn btn-primary btn-sm" style="background: #DC2626; border-color: #DC2626;">📢 Area Alert</button>
+      <button id="btn-damage-summary" class="btn btn-secondary btn-sm" style="color: #FFF; border-color: #4B5563;">📊 Damage Stats</button>
+      <a href="/api/admin/export/incidents.csv" id="btn-export-csv" class="btn btn-secondary btn-sm" style="color: #FFF; border-color: #4B5563;">📥 Export CSV</a>
+      <a href="dashboard.html" class="btn btn-secondary btn-sm" style="color: #9CA3AF; border-color: #374151;">Exit to Citizen View</a>
+    </div>
+  </header>
+
+  <!-- Main View Split -->
+  <main class="admin-main-container">
+    
+    <!-- Left: Map Pane -->
+    <div class="admin-map-pane">
+      <div id="admin-map"></div>
+
+      <!-- Map Layer Controls Overlay -->
+      <div class="admin-map-overlay">
+        <span style="font-size: 0.75rem; font-weight: 700; color: #9CA3AF; text-transform: uppercase;">MAP LAYERS</span>
+        <label class="admin-layer-toggle">
+          <input type="checkbox" id="layer-toggle-sos" checked> 🚨 Active SOS Pings
+        </label>
+        <label class="admin-layer-toggle">
+          <input type="checkbox" id="layer-toggle-reports" checked> ⚠️ Citizen Reports
+        </label>
+        <label class="admin-layer-toggle">
+          <input type="checkbox" id="layer-toggle-shelters" checked> 🏠 Shelters & Occupancy
+        </label>
+        <label class="admin-layer-toggle">
+          <input type="checkbox" id="layer-toggle-volunteers" checked> 🤝 Available Volunteers
+        </label>
+        <label class="admin-layer-toggle">
+          <input type="checkbox" id="layer-toggle-checkins" checked> 📍 Recent Check-ins
+        </label>
+      </div>
+    </div>
+
+    <!-- Right: Triage Queue Pane -->
+    <div class="admin-triage-pane">
+      <div class="triage-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h2 class="heading-md" style="margin: 0; font-size: 1.1rem;">Incident Triage Queue</h2>
+          <span class="subtext" id="incident-count-badge">0 incidents</span>
+        </div>
+
+        <!-- Filters -->
+        <div class="triage-filters">
+          <select id="filter-type" class="input" style="padding: 0.35rem 0.5rem; font-size: 0.8rem;">
+            <option value="">All Types</option>
+            <option value="sos">Emergency SOS</option>
+            <option value="report">Citizen Reports</option>
+            <option value="help_request">Help Requests</option>
+          </select>
+          <select id="filter-status" class="input" style="padding: 0.35rem 0.5rem; font-size: 0.8rem;">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="open">Open</option>
+            <option value="acknowledged">Acknowledged</option>
+            <option value="resolved">Resolved</option>
+          </select>
+          <select id="filter-window" class="input" style="padding: 0.35rem 0.5rem; font-size: 0.8rem;">
+            <option value="">All Time</option>
+            <option value="1">Last 1 hour</option>
+            <option value="6">Last 6 hours</option>
+            <option value="24">Last 24 hours</option>
+          </select>
+          <input type="text" id="filter-search" class="input" placeholder="Search phone/name…" style="padding: 0.35rem 0.5rem; font-size: 0.8rem;">
+        </div>
+      </div>
+
+      <!-- Triage Items List -->
+      <div class="triage-queue-list" id="triage-queue-container">
+        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+          Loading priority queue...
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Incident Action / Audit Trail Modal -->
+  <div id="incident-modal" class="audit-modal-backdrop">
+    <div class="audit-modal">
+      <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span class="label-caps" id="modal-incident-type">INCIDENT DETAILS</span>
+          <h3 class="heading-md" id="modal-incident-title" style="margin: 0.2rem 0 0;">Incident #</h3>
+        </div>
+        <button id="btn-close-modal" class="btn btn-secondary btn-sm">✕ Close</button>
+      </div>
+
+      <div style="padding: 1.25rem 1.5rem; overflow-y: auto; flex: 1;">
+        <div id="modal-incident-body" style="margin-bottom: 1.25rem; font-size: 0.9rem; line-height: 1.5;"></div>
+
+        <!-- Action Form -->
+        <div class="card" style="background: var(--bg-surface); padding: 1rem; margin-bottom: 1.5rem;">
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem;">Take Triage Action</h4>
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+            <button class="btn btn-secondary btn-sm btn-action-select" data-action="acknowledged">Acknowledge</button>
+            <button class="btn btn-secondary btn-sm btn-action-select" data-action="assigned">Assign Unit</button>
+            <button class="btn btn-primary btn-sm btn-action-select" data-action="resolved" style="background: #10B981; border-color: #10B981;">Mark Resolved</button>
+          </div>
+          <input type="text" id="action-note" class="input" placeholder="Add operational notes or responder unit name..." style="margin-bottom: 0.5rem;">
+          <button id="btn-submit-action" class="btn btn-primary btn-sm btn-full">Submit Action</button>
+        </div>
+
+        <!-- Audit Trail -->
+        <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem;">Incident Audit Trail</h4>
+        <div id="modal-audit-trail" style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <span class="subtext">No prior actions logged.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Area Broadcast Alert Modal -->
+  <div id="broadcast-modal" class="audit-modal-backdrop">
+    <div class="audit-modal" style="max-width: 520px;">
+      <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="heading-md" style="margin: 0;">🚨 Send Emergency Broadcast</h3>
+        <button id="btn-close-broadcast" class="btn btn-secondary btn-sm">✕</button>
+      </div>
+      <div style="padding: 1.25rem 1.5rem;">
+        <p class="subtext" style="margin-bottom: 1rem;">Dispatches a high-priority banner alert to all active citizen devices inside the specified perimeter.</p>
+        
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label class="label-caps">ALERT TITLE</label>
+          <input type="text" id="bc-title" class="input" placeholder="e.g. FLASH FLOOD EVACUATION NOTICE" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label class="label-caps">MESSAGE INSTRUCTIONS</label>
+          <textarea id="bc-message" class="input" rows="3" placeholder="Clear public instructions (e.g. Move to designated high ground shelters immediately...)" required></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;">
+          <div>
+            <label class="label-caps">SEVERITY</label>
+            <select id="bc-severity" class="input">
+              <option value="critical">Critical (Red)</option>
+              <option value="warning">Warning (Amber)</option>
+              <option value="advisory">Advisory (Blue)</option>
+            </select>
+          </div>
+          <div>
+            <label class="label-caps">RADIUS (KM)</label>
+            <input type="number" id="bc-radius" class="input" value="10" min="1" max="50">
+          </div>
+        </div>
+
+        <button id="btn-send-broadcast" class="btn btn-primary btn-full" style="background: #DC2626; border-color: #DC2626;">📡 Broadcast Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Damage Summary Stats Modal -->
+  <div id="damage-modal" class="audit-modal-backdrop">
+    <div class="audit-modal" style="max-width: 580px;">
+      <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="heading-md" style="margin: 0;">📊 Damage Assessment Overview</h3>
+        <button id="btn-close-damage" class="btn btn-secondary btn-sm">✕</button>
+      </div>
+      <div style="padding: 1.25rem 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.25rem;">
+          <div>
+            <span class="subtext">Total Estimated Loss</span>
+            <h2 class="heading-lg" id="dmg-total-loss" style="color: #DC2626; margin: 0.2rem 0 0;">₹ 0</h2>
+          </div>
+          <div>
+            <span class="subtext">Total Claims</span>
+            <h3 class="heading-md" id="dmg-total-claims" style="margin: 0.2rem 0 0; text-align: right;">0</h3>
+          </div>
+        </div>
+
+        <canvas id="damage-summary-canvas" width="500" height="180" style="width: 100%; height: 180px; background: var(--bg-surface); border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 1rem;"></canvas>
+
+        <div id="dmg-breakdown-details" style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.4rem;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../js/services/api.js"></script>
+  <script src="../js/services/auth.service.js"></script>
+  <script src="../js/pages/admin.js"></script>
+</body>
+</html>

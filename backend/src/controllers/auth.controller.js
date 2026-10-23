@@ -111,9 +111,12 @@ exports.verifyOtp = async (req, res) => {
 
     const userId = user ? user._id : 'user_default';
     const email = user ? user.email : 'user@example.com';
+    const role = user ? (user.role || 'citizen') : 'citizen';
+    const district = user ? (user.district || '') : '';
+    const verifiedResponder = user ? Boolean(user.verifiedResponder) : false;
 
     const token = jwt.sign(
-      { userId, email },
+      { userId, email, role },
       process.env.JWT_SECRET || 'super_secret_floodsahaay_jwt_key_2026_dev',
       { expiresIn: '7d' }
     );
@@ -126,7 +129,10 @@ exports.verifyOtp = async (req, res) => {
         id: userId,
         name: user ? user.name : 'User',
         email: email,
-        phone: phone
+        phone: phone,
+        role,
+        district,
+        verifiedResponder
       }
     });
   } catch (error) {
@@ -163,8 +169,12 @@ exports.login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
+    const role = user.role || 'citizen';
+    const district = user.district || '';
+    const verifiedResponder = Boolean(user.verifiedResponder);
+
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      { userId: user._id, email: user.email, role },
       process.env.JWT_SECRET || 'super_secret_floodsahaay_jwt_key_2026_dev',
       { expiresIn: '7d' }
     );
@@ -177,6 +187,9 @@ exports.login = async (req, res) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
+        role,
+        district,
+        verifiedResponder,
         avatar: user.avatar || ''
       }
     });

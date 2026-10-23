@@ -18,19 +18,25 @@ router.get('/', authMiddleware, async (req, res) => {
       user = await User.findById(req.user.userId).select('-passwordHash');
     } else {
       const { inMemoryUsers } = require('../controllers/auth.controller');
-      const found = (inMemoryUsers || []).find(u => u._id === req.user.userId || u.email === req.user.email);
+      const found = (inMemoryUsers || []).find(u => String(u._id || u.id) === String(req.user.userId) || u.email === req.user.email);
 
       user = inMemoryProfiles[req.user.userId] || (found ? {
         _id: found._id,
         name: found.name,
         email: found.email,
         phone: found.phone,
+        role: found.role || 'citizen',
+        district: found.district || '',
+        verifiedResponder: Boolean(found.verifiedResponder),
         settings: { notifications: { floodAlerts: true, sosAlerts: true }, privacy: { shareLocation: true }, theme: 'light' }
       } : {
         _id: req.user.userId,
         name: req.user.name || '',
         email: req.user.email || '',
         phone: req.user.phone || '',
+        role: req.user.role || 'citizen',
+        district: req.user.district || '',
+        verifiedResponder: Boolean(req.user.verifiedResponder),
         settings: { notifications: { floodAlerts: true, sosAlerts: true }, privacy: { shareLocation: true }, theme: 'light' }
       });
     }

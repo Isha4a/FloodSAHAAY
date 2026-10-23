@@ -2,9 +2,22 @@ const mongoose = require('mongoose');
 
 const SOSEventSchema = new mongoose.Schema({
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: mongoose.Schema.Types.Mixed,
     required: true,
+    index: true
+  },
+  userName: {
+    type: String,
+    default: 'Citizen'
+  },
+  phone: {
+    type: String,
+    default: ''
+  },
+  source: {
+    type: String,
+    enum: ['app', 'mesh', 'sms'],
+    default: 'app',
     index: true
   },
   lat: {

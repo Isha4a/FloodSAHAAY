@@ -33,14 +33,19 @@
     <nav class="nav-tabs" id="desktop-nav">
       <a href="#overview" class="nav-tab active" data-tab="overview">Overview</a>
       <a href="#map" class="nav-tab" data-tab="map">Map</a>
+      <a href="#reports" class="nav-tab" data-tab="reports">Reports <span id="nav-reports-badge" class="badge badge-high" style="padding: 2px 6px; font-size: 0.7rem; display: none;"></span></a>
       <a href="#alerts" class="nav-tab" data-tab="alerts">Alerts <span id="nav-alerts-badge" class="badge badge-critical" style="padding: 2px 6px; font-size: 0.7rem; display: none;"></span></a>
       <a href="#emergency" class="nav-tab" data-tab="emergency">Emergency</a>
       <a href="#safety" class="nav-tab" data-tab="safety">Safety</a>
       <a href="#shelters" class="nav-tab" data-tab="shelters">Shelters</a>
+      <a href="#volunteers" class="nav-tab" data-tab="volunteers">Volunteers</a>
+      <a href="#recovery" class="nav-tab" data-tab="recovery">Recovery</a>
       <a href="#helpline" class="nav-tab" data-tab="helpline">Helpline</a>
     </nav>
 
     <div class="nav-right">
+      <a href="admin.html" id="header-admin-link" class="badge" style="background: #DC2626; color: #FFF; text-decoration: none; padding: 0.35rem 0.65rem; font-weight: 700; display: none;">🚨 Command Center</a>
+      <a href="shelter-manager.html" id="header-shelter-link" class="badge" style="background: #8B5CF6; color: #FFF; text-decoration: none; padding: 0.35rem 0.65rem; font-weight: 700; display: none;">🏠 Shelter Ops</a>
       <span id="current-location-label" title="Click to change location" style="cursor: pointer; padding: 0.3rem 0.6rem; background: rgba(0,0,0,0.04); border-radius: var(--radius-sm); font-weight: 600;">📍 Lucknow</span>
       <button id="btn-open-donation" class="btn btn-donate btn-sm" title="Donate to government flood relief funds">🫶 Donate Relief</button>
       <a href="profile.html">Profile</a>
@@ -65,6 +70,19 @@
               <span class="subtext" id="overview-updated-time">Updated recently</span>
               <span class="badge badge-live" style="margin-left: 0.5rem;"><span class="badge-dot"></span> Live</span>
             </div>
+          </div>
+
+          <!-- Quick Safety Check-in Action Bar -->
+          <div class="checkin-action-bar">
+            <button class="btn btn-checkin-safe btn-quick-checkin" data-status="safe">
+              <span>✓</span> I'm Safe
+            </button>
+            <button class="btn btn-checkin-evac btn-quick-checkin" data-status="evacuating">
+              <span>🏃</span> Evacuating
+            </button>
+            <button class="btn btn-checkin-help btn-quick-checkin" data-status="need_help">
+              <span>🚨</span> Need Help
+            </button>
           </div>
 
           <!-- Risk Score Card -->
@@ -113,6 +131,13 @@
               <span class="condition-val" id="val-prox">-- km</span>
               <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-prox" style="width: 0%;"></div></div>
               <span class="condition-pct" id="pct-prox">--%</span>
+            </div>
+
+            <div class="condition-row" id="row-crowd-signal" style="display: none;">
+              <span class="condition-label" style="color: #2563EB;">⚠️ Crowd ground reports</span>
+              <span class="condition-val" id="val-crowd-signal" style="color: #2563EB;">+0 pts</span>
+              <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-crowd-signal" style="width: 0%; background: #2563EB;"></div></div>
+              <span class="condition-pct" id="pct-crowd-signal" style="color: #2563EB;">0 verified</span>
             </div>
           </div>
 
@@ -301,10 +326,32 @@
     <section id="tab-safety" class="tab-panel">
       <div class="dashboard-layout">
         <div class="dashboard-main">
+          <!-- Big Check-in & Share Row -->
+          <div class="card" style="margin-bottom: 1.5rem; background: #FFFFFF;">
+            <p class="label-caps" style="margin-bottom: 0.5rem;">UPDATE YOUR CURRENT STATUS</p>
+            <div class="checkin-action-bar" style="margin-bottom: 1rem;">
+              <button class="btn btn-checkin-safe btn-quick-checkin" data-status="safe">
+                <span>✓</span> I'm Safe
+              </button>
+              <button class="btn btn-checkin-evac btn-quick-checkin" data-status="evacuating">
+                <span>🏃</span> Evacuating
+              </button>
+              <button class="btn btn-checkin-help btn-quick-checkin" data-status="need_help">
+                <span>🚨</span> Need Help
+              </button>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; border-top: 1px solid var(--border); padding-top: 0.75rem;">
+              <span class="subtext">Low-battery sharing & live public tracking</span>
+              <button id="btn-share-live-location" class="btn btn-secondary btn-sm">
+                🔗 Share Live Location (24h Link)
+              </button>
+            </div>
+          </div>
+
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
             <div>
-              <h2 class="heading-lg">Your people</h2>
-              <p class="subtext">Stay connected when conditions change.</p>
+              <h2 class="heading-lg">Safety Circle Members</h2>
+              <p class="subtext">Real-time status updates from connected family & emergency contacts.</p>
             </div>
             <button id="btn-invite-safety" class="btn btn-primary">+ Invite</button>
           </div>
@@ -323,8 +370,18 @@
           <div id="shelters-leaflet-map" style="width: 100%; height: 100%; min-height: calc(100vh - 64px);"></div>
         </div>
         <div class="dashboard-sidebar">
+          <!-- Route Hazard Warning Container -->
+          <div id="shelter-route-warning-banner" class="route-warning-banner" style="display: none;">
+            <span style="font-size: 1.3rem;">⚠️</span>
+            <div>
+              <strong>Road Obstruction Warning</strong>
+              <p id="shelter-route-warning-msg" style="margin: 0.2rem 0 0.4rem; font-size: 0.82rem;">Route passes near reported flooded underpass.</p>
+              <div id="shelter-alternate-suggestion" style="font-weight: 600; font-size: 0.8rem; color: #1E3A8A;"></div>
+            </div>
+          </div>
+
           <h3 class="heading-md">Nearby safe shelters</h3>
-          <p class="subtext" style="margin-bottom: 1.5rem;">Nearest first · Shows available space</p>
+          <p class="subtext" style="margin-bottom: 1.5rem;">Ranked by proximity & availability · Real-time occupancy</p>
           <div id="shelters-list"></div>
         </div>
       </div>
@@ -551,6 +608,353 @@
           </div>
         </div>
       </div>
+    <!-- 8. CROWDSOURCED FLOOD REPORTS TAB -->
+    <section id="tab-reports" class="tab-panel">
+      <div class="dashboard-layout">
+        <!-- Left: One-Tap Report Submission Form -->
+        <div class="dashboard-main">
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+              <div>
+                <p class="label-caps" style="color: #2563EB;">TIER 4 CROWDSOURCING</p>
+                <h2 class="heading-lg" style="margin: 0.2rem 0 0;">Citizen Flood Report</h2>
+              </div>
+              <span id="report-offline-badge" class="badge badge-high" style="display: none;">Offline Mode</span>
+            </div>
+            <p class="subtext" style="margin-bottom: 1.25rem;">
+              Report ground-truth water levels and road hazards. Nearby citizens can verify your report to build consensus.
+            </p>
+
+            <form id="flood-report-form">
+              <!-- Type Selection -->
+              <label class="label-caps">1. SELECT HAZARD TYPE</label>
+              <div class="touch-type-grid" id="report-type-selector">
+                <div class="touch-type-card active" data-type="water_level">
+                  <span style="font-size: 1.4rem;">🌊</span>
+                  <p style="font-size: 0.8rem; margin: 0.2rem 0 0;">Water Level</p>
+                </div>
+                <div class="touch-type-card" data-type="road_blocked">
+                  <span style="font-size: 1.4rem;">🚧</span>
+                  <p style="font-size: 0.8rem; margin: 0.2rem 0 0;">Road Blocked</p>
+                </div>
+                <div class="touch-type-card" data-type="bridge_damaged">
+                  <span style="font-size: 1.4rem;">🌉</span>
+                  <p style="font-size: 0.8rem; margin: 0.2rem 0 0;">Bridge Damaged</p>
+                </div>
+                <div class="touch-type-card" data-type="power_outage">
+                  <span style="font-size: 1.4rem;">⚡</span>
+                  <p style="font-size: 0.8rem; margin: 0.2rem 0 0;">Power Outage</p>
+                </div>
+                <div class="touch-type-card" data-type="landslide">
+                  <span style="font-size: 1.4rem;">⛰️</span>
+                  <p style="font-size: 0.8rem; margin: 0.2rem 0 0;">Landslide</p>
+                </div>
+                <div class="touch-type-card" data-type="need_help">
+                  <span style="font-size: 1.4rem;">🆘</span>
+                  <p style="font-size: 0.8rem; margin: 0.2rem 0 0;">Need Help</p>
+                </div>
+              </div>
+
+              <!-- Water Level Selection (Shown only when type=water_level) -->
+              <div id="water-level-section" style="margin: 1rem 0;">
+                <label class="label-caps">2. WATER LEVEL DEPTH</label>
+                <div class="water-level-grid">
+                  <button type="button" class="water-level-btn" data-level="ankle">🦶 Ankle</button>
+                  <button type="button" class="water-level-btn" data-level="knee">🦵 Knee</button>
+                  <button type="button" class="water-level-btn active" data-level="waist">🩳 Waist</button>
+                  <button type="button" class="water-level-btn" data-level="chest">🫁 Chest</button>
+                  <button type="button" class="water-level-btn" data-level="above_head">🏊 Overhead</button>
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="label-caps">3. DETAILS & LANDMARK (MAX 280 CHARS)</label>
+                <textarea id="report-description" class="form-input" rows="2" maxlength="280" placeholder="e.g. Water over knee height near main market square; vehicles unable to pass..."></textarea>
+                <div style="text-align: right; font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">
+                  <span id="desc-char-count">0</span> / 280
+                </div>
+              </div>
+
+              <!-- Photo Attachment -->
+              <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="label-caps">4. ATTACH PHOTO (+10 CONFIDENCE BOOST, OPTIONAL)</label>
+                <input type="file" id="report-photo-input" accept="image/*" class="form-input" style="padding: 0.4rem;">
+                <div id="report-photo-preview" style="margin-top: 0.5rem; display: none;">
+                  <img id="report-preview-img" src="" alt="Report Preview" style="max-height: 120px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                  <button type="button" id="btn-remove-photo" class="btn btn-secondary btn-sm" style="margin-left: 0.5rem; vertical-align: top;">Remove</button>
+                </div>
+              </div>
+
+              <!-- Location Pin -->
+              <div class="form-group" style="margin-bottom: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                  <label class="label-caps" style="margin: 0;">5. GPS LOCATION</label>
+                  <button type="button" id="btn-report-detect-gps" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">
+                    ⊕ Detect My Location
+                  </button>
+                </div>
+                <input type="text" id="report-location-display" class="form-input" readonly value="Detecting location..." style="background: var(--bg-surface); font-size: 0.85rem; margin-bottom: 0.5rem;">
+                <div id="report-picker-map" style="height: 180px; width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--border);"></div>
+                <span class="subtext" style="font-size: 0.72rem; margin-top: 4px; display: block;">💡 Drag the pin on map to adjust exact spot.</span>
+              </div>
+
+              <button type="submit" id="btn-submit-report" class="btn btn-primary btn-full" style="font-size: 1rem; padding: 0.85rem;">
+                🚀 Submit Flood Report
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Right: Community Ground Truth Feed -->
+        <div class="dashboard-sidebar" style="max-width: 440px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <div>
+              <h3 class="heading-md" style="margin: 0;">Ground Truth Feed</h3>
+              <p class="subtext">Within 10 km · Verified by local consensus</p>
+            </div>
+            <button id="btn-refresh-reports" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">↻ Refresh</button>
+          </div>
+
+          <!-- Feed Filters -->
+          <div style="display: flex; gap: 0.4rem; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 4px;">
+            <button class="btn btn-primary btn-sm feed-filter-btn" data-filter="">All</button>
+            <button class="btn btn-secondary btn-sm feed-filter-btn" data-filter="water_level">Water</button>
+            <button class="btn btn-secondary btn-sm feed-filter-btn" data-filter="road_blocked">Roads</button>
+            <button class="btn btn-secondary btn-sm feed-filter-btn" data-filter="need_help">Needs Help</button>
+          </div>
+
+          <!-- Reports Feed List Container -->
+          <div id="reports-feed-container">
+            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              Loading nearby reports...
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. VOLUNTEERS & HELP REQUESTS TAB -->
+    <section id="tab-volunteers" class="tab-panel">
+      <div class="dashboard-layout">
+        <div class="dashboard-main">
+          
+          <!-- Citizen Emergency Help Request Banner -->
+          <div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 100%); border-left: 5px solid #2563EB;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <span class="label-caps" style="color: #2563EB;">COMMUNITY AID DISPATCH</span>
+                <h2 class="heading-md" style="margin: 0.2rem 0;">Need Evacuation or Supplies Assistance?</h2>
+                <p class="subtext">Connect directly with vetted local rescue, medical, boat, and food relief volunteers.</p>
+              </div>
+              <button id="btn-open-help-request-modal" class="btn btn-primary" style="background: #2563EB; border-color: #2563EB;">
+                + Request Emergency Help
+              </button>
+            </div>
+          </div>
+
+          <!-- My Help Requests List -->
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <h3 class="heading-md" style="margin-bottom: 0.75rem;">My Active Help Requests</h3>
+            <div id="my-help-requests-list">
+              <span class="subtext">You have not submitted any open help requests.</span>
+            </div>
+          </div>
+
+          <!-- Open Requests Nearby (For Volunteers to Claim) -->
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <div>
+                <h3 class="heading-md" style="margin: 0;">Nearby Open Community Requests</h3>
+                <p class="subtext">Volunteers can accept open tasks. First responder to accept is matched.</p>
+              </div>
+              <button id="btn-refresh-help-requests" class="btn btn-secondary btn-sm">↻ Refresh</button>
+            </div>
+            <div id="nearby-help-requests-list">
+              <span class="subtext">Loading available requests...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar: Volunteer Profile Controls -->
+        <div class="dashboard-sidebar">
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <span class="label-caps">VOLUNTEER READINESS</span>
+              <span id="vol-avail-badge" class="badge badge-live">AVAILABLE</span>
+            </div>
+
+            <h3 class="heading-md" style="margin-bottom: 0.5rem;" id="vol-display-name">Field Volunteer</h3>
+            <p class="subtext" style="margin-bottom: 1rem;">Toggle your dispatch availability status for emergency matching.</p>
+
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem;">
+              <button class="btn btn-primary btn-sm btn-vol-avail" data-avail="available" style="flex: 1;">Available</button>
+              <button class="btn btn-secondary btn-sm btn-vol-avail" data-avail="busy" style="flex: 1;">Busy</button>
+              <button class="btn btn-secondary btn-sm btn-vol-avail" data-avail="offline" style="flex: 1;">Offline</button>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+              <label class="label-caps">YOUR SKILLS</label>
+              <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.25rem;">
+                <label class="badge" style="background: var(--bg-surface); cursor: pointer;"><input type="checkbox" class="vol-skill-chk" value="rescue" checked> 🏊 Rescue</label>
+                <label class="badge" style="background: var(--bg-surface); cursor: pointer;"><input type="checkbox" class="vol-skill-chk" value="boat" checked> 🚤 Boat</label>
+                <label class="badge" style="background: var(--bg-surface); cursor: pointer;"><input type="checkbox" class="vol-skill-chk" value="medical"> 💊 Medical</label>
+                <label class="badge" style="background: var(--bg-surface); cursor: pointer;"><input type="checkbox" class="vol-skill-chk" value="driving" checked> 🚙 Driving</label>
+                <label class="badge" style="background: var(--bg-surface); cursor: pointer;"><input type="checkbox" class="vol-skill-chk" value="food"> 🍲 Food</label>
+              </div>
+            </div>
+
+            <button id="btn-save-vol-profile" class="btn btn-secondary btn-sm btn-full" style="margin-top: 0.5rem;">
+              Save Volunteer Profile
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. POST-FLOOD RECOVERY MODULE TAB -->
+    <section id="tab-recovery" class="tab-panel">
+      <div style="max-width: 1080px; margin: 1.5rem auto; padding: 0 1rem;">
+        
+        <!-- Risk-Aware Health Advisory Banner -->
+        <div id="recovery-health-banner" class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, #FFFBEB 0%, #FFFFFF 100%); border-left: 5px solid #F59E0B;">
+          <div style="display: flex; align-items: flex-start; gap: 1rem;">
+            <span style="font-size: 2.2rem;">💧</span>
+            <div>
+              <span class="label-caps" style="color: #D97706;">WATER SAFETY & EPIDEMIC ADVISORY ACTIVE</span>
+              <h2 class="heading-md" style="margin: 0.25rem 0;">High Infection Risk in Submerged & Receding Zones</h2>
+              <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
+                Floodwaters carry sewage, chemical toxins, and leptospirosis bacteria. Never consume unboiled tap water. Wash wounds immediately with antiseptic.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Split Grid: Damage Claim Form & My Claims -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;" class="recovery-split-grid">
+          
+          <!-- Damage Claim Form -->
+          <div class="card">
+            <h3 class="heading-md" style="margin-bottom: 0.25rem;">File Flood Damage Assessment</h3>
+            <p class="subtext" style="margin-bottom: 1.25rem;">Official relief compensation assessment claim.</p>
+
+            <form id="damage-report-form">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <div>
+                  <label class="label-caps">CATEGORY</label>
+                  <select id="dmg-category" class="input" required>
+                    <option value="house">Residential House</option>
+                    <option value="crop">Agricultural Crop</option>
+                    <option value="vehicle">Vehicle / Motor</option>
+                    <option value="livestock">Livestock / Cattle</option>
+                    <option value="infrastructure">Commercial / Shop</option>
+                    <option value="other">Other Assets</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="label-caps">SEVERITY</label>
+                  <select id="dmg-severity" class="input" required>
+                    <option value="minor">Minor Damage (< 25%)</option>
+                    <option value="moderate">Moderate Damage (25–50%)</option>
+                    <option value="severe">Severe Damage (50–75%)</option>
+                    <option value="destroyed">Total Collapse (100%)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label class="label-caps">ESTIMATED LOSS IN RUPEES (INR ₹)</label>
+                <input type="number" id="dmg-loss" class="input" placeholder="e.g. 85000" min="0" required>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label class="label-caps">DESCRIPTION OF LOSS & ASSET DETAILS</label>
+                <textarea id="dmg-description" class="input" rows="2" placeholder="Explain damage to boundary walls, roof, crops, electrical fixtures..." required></textarea>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="label-caps">DAMAGE PHOTOS (UP TO 3)</label>
+                <input type="file" id="dmg-photos-input" accept="image/*" class="input" multiple>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-full">
+                📑 Submit Claim for Verification
+              </button>
+            </form>
+          </div>
+
+          <!-- My Claims History -->
+          <div class="card">
+            <h3 class="heading-md" style="margin-bottom: 0.25rem;">My Submitted Claims</h3>
+            <p class="subtext" style="margin-bottom: 1.25rem;">Track relief assessment verification status.</p>
+            <div id="my-damage-claims-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <span class="subtext">Loading your claims...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Health & Safety Advisory Section ("After the flood") -->
+        <div style="margin-top: 2rem;">
+          <p class="label-caps" style="color: var(--primary);">OFFLINE-READY RECOVERY GUIDE</p>
+          <h2 class="heading-lg" style="margin: 0.25rem 0 0.5rem;">After the Flood: Health & Safety Protocols</h2>
+          <p class="subtext" style="margin-bottom: 1.5rem;">Essential steps to prevent disease outbreaks, electrical shocks, and contamination after waters recede.</p>
+
+          <div class="health-advisory-grid">
+            <div class="health-card">
+              <span style="font-size: 1.8rem;">🦠</span>
+              <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0.5rem 0 0.25rem;">Waterborne Disease Prevention</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+                Watch for fever, vomiting, and diarrhea (cholera, typhoid, leptospirosis). Avoid wading in stagnant puddles with open cuts or scratches.
+              </p>
+            </div>
+
+            <div class="health-card">
+              <span style="font-size: 1.8rem;">🚰</span>
+              <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0.5rem 0 0.25rem;">Safe Drinking Water</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+                Boil water vigorously for at least 1 minute before drinking or cooking. If boiling is impossible, treat with chlorine/halogen tablets according to packet instructions.
+              </p>
+            </div>
+
+            <div class="health-card">
+              <span style="font-size: 1.8rem;">🍞</span>
+              <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0.5rem 0 0.25rem;">Food Safety & Disposal</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+                Discard all food that came into contact with floodwater, including canned items with bulging, damaged, or rusted seams.
+              </p>
+            </div>
+
+            <div class="health-card">
+              <span style="font-size: 1.8rem;">⚡</span>
+              <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0.5rem 0 0.25rem;">Electrical & Gas Hazard Safety</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+                Never touch electrical appliances or meters while standing in water. Have an electrician inspect flooded wiring before flipping main circuit breakers.
+              </p>
+            </div>
+
+            <div class="health-card">
+              <span style="font-size: 1.8rem;">🐍</span>
+              <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0.5rem 0 0.25rem;">Snake Bites & Wound Care</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+                Floods displace reptiles and insects. Wear sturdy rubber boots and gloves when clearing debris. In case of snake bite, immobilize limb and call 108 immediately.
+              </p>
+            </div>
+
+            <div class="health-card" style="background: #FFF5F5; border-color: #FED7D7;">
+              <span style="font-size: 1.8rem;">📞</span>
+              <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0.5rem 0 0.25rem;">Official Relief Helplines</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Click to dial official emergency response desks:</p>
+              <div style="display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.85rem; font-weight: 600;">
+                <a href="tel:1078" style="color: #DC2626;">🚁 NDMA Flood Relief: 1078</a>
+                <a href="tel:112" style="color: #DC2626;">🚨 National Emergency: 112</a>
+                <a href="tel:108" style="color: #DC2626;">🚑 Ambulance / Medical: 108</a>
+                <a href="tel:181" style="color: #DC2626;">👩 Women Emergency: 181</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </section>
 
   </main>
@@ -560,13 +964,17 @@
   <nav id="mobile-nav-menu" class="mobile-nav-menu">
     <a href="#overview" class="nav-tab active" data-tab="overview">📊 Overview</a>
     <a href="#map" class="nav-tab" data-tab="map">🗺️ Map</a>
+    <a href="#reports" class="nav-tab" data-tab="reports">⚠️ Reports</a>
     <a href="#alerts" class="nav-tab" data-tab="alerts">🔔 Alerts <span id="mobile-nav-alerts-badge" class="badge badge-critical" style="padding: 2px 6px; font-size: 0.7rem; display: none;"></span></a>
-
     <a href="#emergency" class="nav-tab" data-tab="emergency">🚨 Emergency</a>
     <a href="#safety" class="nav-tab" data-tab="safety">🛡️ Safety</a>
     <a href="#shelters" class="nav-tab" data-tab="shelters">🏠 Shelters</a>
+    <a href="#volunteers" class="nav-tab" data-tab="volunteers">🤝 Volunteers</a>
+    <a href="#recovery" class="nav-tab" data-tab="recovery">📑 Recovery</a>
     <a href="#helpline" class="nav-tab" data-tab="helpline">📞 Helpline</a>
     <hr style="border: none; border-top: 1px solid var(--border); margin: 0.5rem 0;">
+    <a href="admin.html" id="mobile-admin-link" style="padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700; color: #DC2626; display: none;">🚨 Command Center</a>
+    <a href="shelter-manager.html" id="mobile-shelter-link" style="padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700; color: #8B5CF6; display: none;">🏠 Shelter Ops</a>
     <a href="profile.html" style="padding: 0.75rem 1rem; font-size: 1rem; font-weight: 500;">👤 Profile</a>
   </nav>
 
@@ -580,9 +988,9 @@
       <span class="nav-icon">🗺️</span>
       <span class="nav-label">Map</span>
     </a>
-    <a href="#alerts" class="bottom-nav-item nav-tab" data-tab="alerts">
-      <span class="nav-icon">🔔</span>
-      <span class="nav-label">Alerts</span>
+    <a href="#reports" class="bottom-nav-item nav-tab" data-tab="reports">
+      <span class="nav-icon">⚠️</span>
+      <span class="nav-label">Reports</span>
     </a>
     <a href="#emergency" class="bottom-nav-item nav-tab" data-tab="emergency">
       <span class="nav-icon">🚨</span>
@@ -592,14 +1000,13 @@
       <span class="nav-icon">🏠</span>
       <span class="nav-label">Shelters</span>
     </a>
-    <a href="#helpline" class="bottom-nav-item nav-tab" data-tab="helpline">
-      <span class="nav-icon">📞</span>
-      <span class="nav-label">Helpline</span>
+    <a href="#recovery" class="bottom-nav-item nav-tab" data-tab="recovery">
+      <span class="nav-icon">📑</span>
+      <span class="nav-label">Recovery</span>
     </a>
   </nav>
 
   <!-- MODALS -->
-
 
   <!-- 1. Location Selection Modal -->
   <div id="location-modal" class="modal-backdrop">
@@ -682,7 +1089,7 @@
     </div>
   </div>
 
-  <!-- 4. Safety Circle Invite & Add Person Modal -->
+  <!-- 4. Safety Circle Invite Modal -->
   <div id="invite-modal" class="modal-backdrop">
     <div class="modal-content" style="max-width: 480px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
@@ -754,8 +1161,89 @@
     </div>
   </div>
 
+  <!-- 5. Emergency Help Request Modal -->
+  <div id="help-request-modal" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 520px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 class="heading-md" style="margin: 0;">🆘 Request Community Help</h3>
+        <button id="close-help-request-modal" style="font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+      </div>
+      <form id="help-request-form">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+          <div>
+            <label class="label-caps">CATEGORY</label>
+            <select id="req-category" class="input" required>
+              <option value="rescue">Boat / Flood Rescue</option>
+              <option value="medical">Medical First Aid / Medicine</option>
+              <option value="food">Emergency Food Packs</option>
+              <option value="water">Drinking Water</option>
+              <option value="transport">High-Ground Transport</option>
+              <option value="shelter">Shelter Space</option>
+            </select>
+          </div>
+          <div>
+            <label class="label-caps">URGENCY (1-5)</label>
+            <select id="req-urgency" class="input">
+              <option value="5">Level 5 (Life Critical / Submerged)</option>
+              <option value="4">Level 4 (Urgent / Rising Waters)</option>
+              <option value="3" selected>Level 3 (Moderate Need)</option>
+              <option value="2">Level 2 (Preventative)</option>
+              <option value="1">Level 1 (General Support)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+          <div>
+            <label class="label-caps">PEOPLE COUNT</label>
+            <input type="number" id="req-people" class="input" value="1" min="1" max="50" required>
+          </div>
+          <div>
+            <label class="label-caps">VULNERABILITY FLAGS</label>
+            <div style="display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.2rem;">
+              <label style="font-size: 0.75rem;"><input type="checkbox" class="vuln-flag" value="elderly"> Senior</label>
+              <label style="font-size: 0.75rem;"><input type="checkbox" class="vuln-flag" value="infant"> Infant</label>
+              <label style="font-size: 0.75rem;"><input type="checkbox" class="vuln-flag" value="disabled"> Disabled</label>
+              <label style="font-size: 0.75rem;"><input type="checkbox" class="vuln-flag" value="medical"> Medical</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0.75rem;">
+          <label class="label-caps">LOCATION / ADDRESS</label>
+          <input type="text" id="req-address" class="input" placeholder="House / street landmark near Gomti Nagar..." required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="label-caps">SPECIFIC NEEDS / SITUATION</label>
+          <textarea id="req-notes" class="input" rows="2" placeholder="e.g. Ground floor flooded, 2 elderly family members need assistance to reach dry road..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" style="background: #2563EB; border-color: #2563EB;">
+          Dispatch Help Request
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 6. Low Battery Auto-Share Prompt Modal -->
+  <div id="battery-share-modal" class="modal-backdrop">
+    <div class="modal-content" style="text-align: center; max-width: 400px;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔋</div>
+      <h3 class="heading-md" style="margin-bottom: 0.5rem; color: #D97706;">Low Battery Warning (<span id="battery-modal-pct">14%</span>)</h3>
+      <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.4;">
+        Your device battery is dropping low and not connected to a charger. Would you like to automatically share your last known location with your Safety Circle now?
+      </p>
+      <div style="display: flex; gap: 0.75rem;">
+        <button id="btn-skip-battery-share" class="btn btn-secondary btn-full">Not Now</button>
+        <button id="btn-confirm-battery-share" class="btn btn-primary btn-full" style="background: #10B981; border-color: #10B981;">Share Location</button>
+      </div>
+    </div>
+  </div>
+
   <script src="../js/services/api.js?v=20260821-3"></script>
   <script src="../js/services/auth.service.js"></script>
+  <script src="../js/services/reports.service.js"></script>
   <script src="../js/pages/dashboard.js?v=20260821-3"></script>
 
 </body>

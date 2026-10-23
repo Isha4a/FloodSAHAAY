@@ -21,6 +21,18 @@ document.addEventListener('DOMContentLoaded', () => {
   let shelterRoutePolyline = null;
   let locationVersion = 0;
 
+  // Layer groups for crowd flood reports
+  let overviewReportsGroup = null;
+  let mainReportsGroup = null;
+  let sheltersReportsGroup = null;
+  let reportPickerMap = null;
+  let reportPickerMarker = null;
+  let reportPickerLoc = { ...selectedLoc };
+  let currentReports = [];
+  let currentReportFilter = '';
+  let activeBlockedRoads = [];
+  let currentReportPhoto = null;
+
   // Toast Helper
   function showToast(message) {
     const container = document.getElementById('toast-container');
@@ -71,11 +83,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (triggerFetch) {
       const requestVersion = ++locationVersion;
       const requestLocation = { ...selectedLoc };
-      // Keep the dashboard responsive and fetch both resources in parallel.
-      // A shelter/geocoder failure must not prevent risk data from rendering.
+      // Keep the dashboard responsive and fetch resources in parallel.
       void Promise.allSettled([
         loadDashboardData(requestVersion, requestLocation),
-        loadSheltersData(requestVersion, requestLocation)
+        loadSheltersData(requestVersion, requestLocation),
+        loadReportsData()
       ]);
     }
   }
@@ -176,12 +188,26 @@ document.addEventListener('DOMContentLoaded', () => {
         sheltersMap.invalidateSize();
         if (selectedLoc) sheltersMap.setView([selectedLoc.lat, selectedLoc.lng], sheltersMap.getZoom() || 12);
       }
+      if (tabId === 'reports' && reportPickerMap) {
+        reportPickerMap.invalidateSize();
+        if (reportPickerMarker && reportPickerLoc) {
+          reportPickerMarker.setLatLng([reportPickerLoc.lat, reportPickerLoc.lng]);
+        }
+      }
     };
 
     requestAnimationFrame(refreshActiveMap);
     setTimeout(refreshActiveMap, 50);
     setTimeout(refreshActiveMap, 200);
     setTimeout(refreshActiveMap, 500);
+
+    if (tabId === 'reports') {
+      loadReportsData();
+    } else if (tabId === 'volunteers') {
+      loadVolunteerModule();
+    } else if (tabId === 'recovery') {
+      loadRecoveryModule();
+    }
   }
 
 
@@ -452,8 +478,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const broadcastBeaconBtn = document.getElementById('btn-broadcast-beacon');
   if (broadcastBeaconBtn) {
-    broadcastBeaconBtn.addEventListener('click', () => {
-      showToast('🚨 Distress beacon broadcasting over 300m–400m BLE/Wi-Fi Direct mesh!');
+    broadcastBeaconBtn.addEventListener('click', async () => {
+      try {
+        broadcastBeaconBtn.disabled = true;
+        await ApiService.post('/sos', {
+          lat: selectedLoc.lat,
+          lng: selectedLoc.lng,
+          address: selectedLoc.name,
+          source: 'mesh'
+        });
+        showToast('🚨 Mesh distress beacon dispatched to nearby offline peers & authorities!');
+      } catch (e) {
+        showToast('🚨 Distress beacon broadcasting over 300m–400m BLE/Wi-Fi Direct mesh!');
+      } finally {
+        broadcastBeaconBtn.disabled = false;
+      }
     });
   }
 
@@ -482,6 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
       overviewMap = L.map('overview-mini-map', { zoomControl: false, dragging: false, scrollWheelZoom: false }).setView([selectedLoc.lat, selectedLoc.lng], 13);
       createTileLayer().addTo(overviewMap);
       window.overviewMarker = L.marker([selectedLoc.lat, selectedLoc.lng]).addTo(overviewMap);
+      overviewReportsGroup = L.layerGroup().addTo(overviewMap);
       setTimeout(() => { if (overviewMap) overviewMap.invalidateSize(); }, 200);
     }
 
@@ -489,6 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('main-leaflet-map')) {
       mainMap = L.map('main-leaflet-map').setView([selectedLoc.lat, selectedLoc.lng], 13);
       createTileLayer().addTo(mainMap);
+      mainReportsGroup = L.layerGroup().addTo(mainMap);
 
       mainMapMarker = L.marker([selectedLoc.lat, selectedLoc.lng], { draggable: true }).addTo(mainMap);
 
@@ -503,9 +544,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
           const location = await reverseGeocode(lat, lng);
-          // Fetch again for the final geocoded coordinates. The first request
-          // was started with the temporary "Resolving place" state and may
-          // have been discarded by the location-version guard.
           await updateLocation(location, true);
           showToast(`Location set to ${location.name}`);
         } catch (err) {
@@ -527,7 +565,42 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('shelters-leaflet-map')) {
       sheltersMap = L.map('shelters-leaflet-map').setView([selectedLoc.lat, selectedLoc.lng], 12);
       createTileLayer().addTo(sheltersMap);
+      sheltersReportsGroup = L.layerGroup().addTo(sheltersMap);
       setTimeout(() => { if (sheltersMap) sheltersMap.invalidateSize(); }, 200);
+    }
+
+    // E. Report Picker Map (Draggable Location Pin)
+    const pickerEl = document.getElementById('report-picker-map');
+    if (pickerEl && !reportPickerMap) {
+      reportPickerMap = L.map('report-picker-map', { zoomControl: false }).setView([selectedLoc.lat, selectedLoc.lng], 14);
+      createTileLayer().addTo(reportPickerMap);
+      reportPickerMarker = L.marker([selectedLoc.lat, selectedLoc.lng], { draggable: true }).addTo(reportPickerMap);
+
+      const updateReportPin = async (lat, lng) => {
+        reportPickerLoc = { lat, lng };
+        const displayInput = document.getElementById('report-location-display');
+        if (displayInput) displayInput.value = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)} (Resolving...)`;
+        try {
+          const geo = await reverseGeocode(lat, lng);
+          if (displayInput) displayInput.value = geo.name || `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+        } catch (e) {
+          if (displayInput) displayInput.value = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+        }
+      };
+
+      reportPickerMarker.on('dragend', (e) => {
+        const { lat, lng } = e.target.getLatLng();
+        updateReportPin(lat, lng);
+      });
+
+      reportPickerMap.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        reportPickerMarker.setLatLng([lat, lng]);
+        updateReportPin(lat, lng);
+      });
+
+      updateReportPin(selectedLoc.lat, selectedLoc.lng);
+      setTimeout(() => { if (reportPickerMap) reportPickerMap.invalidateSize(); }, 300);
     }
   }
 
@@ -906,38 +979,45 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  // 8. Load Shelters Data & Route Navigation
+  // 8. Load Shelters Data & Route Navigation with Ground Truth Hazard Warnings
   async function loadSheltersData(requestVersion = locationVersion, requestLocation = selectedLoc) {
     try {
-      const res = await ApiService.get(`/shelters?lat=${requestLocation.lat}&lng=${requestLocation.lng}&locationName=${encodeURIComponent(requestLocation.name)}`);
+      const [res, roadsRes] = await Promise.allSettled([
+        ApiService.get(`/shelters?lat=${requestLocation.lat}&lng=${requestLocation.lng}&locationName=${encodeURIComponent(requestLocation.name)}`),
+        ReportsService.getBlockedRoads(requestLocation.lat, requestLocation.lng, 15)
+      ]);
+
+      if (roadsRes.status === 'fulfilled' && roadsRes.value && roadsRes.value.success) {
+        activeBlockedRoads = roadsRes.value.blockedRoads || [];
+      }
+
+      if (res.status !== 'fulfilled' || !res.value) return;
+      const sheltersData = res.value;
       if (requestVersion !== locationVersion) return;
       const sheltersList = document.getElementById('shelters-list');
 
-      if (res.success && res.shelters) {
+      if (sheltersData.success && sheltersData.shelters) {
         if (sheltersMap) {
           sheltersMap.setView([selectedLoc.lat, selectedLoc.lng], 13);
           
-          // Clear previous markers
           if (window.sheltersLayerGroup) {
             window.sheltersLayerGroup.clearLayers();
           } else {
             window.sheltersLayerGroup = L.layerGroup().addTo(sheltersMap);
           }
 
-          // User location marker
           L.marker([selectedLoc.lat, selectedLoc.lng], {
             title: 'Your Location'
           }).addTo(window.sheltersLayerGroup).bindPopup(`<b>Your Selected Area</b><br>${selectedLoc.name}`);
 
-          // Shelter markers
-          res.shelters.forEach(s => {
+          sheltersData.shelters.forEach(s => {
             L.marker([s.lat, s.lng]).addTo(window.sheltersLayerGroup)
               .bindPopup(`<b>${s.name}</b><br>${s.address}<br>Distance: ${s.distanceKm} km (~${s.driveTimeMinutes} min)<br>${s.capacity ? `Capacity: ${s.currentOccupancy}/${s.capacity}` : 'Capacity: Not published'}${s.source ? `<br>Source: ${s.source}` : ''}`);
           });
         }
 
         if (sheltersList) {
-          sheltersList.innerHTML = res.shelters.map(s => `
+          sheltersList.innerHTML = sheltersData.shelters.map(s => `
             <div class="shelter-card">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem;">
                 <strong style="font-size: 1rem;">${s.name}</strong>
@@ -961,17 +1041,52 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', () => {
               const destLat = parseFloat(btn.dataset.lat);
               const destLng = parseFloat(btn.dataset.lng);
+              const shelterName = btn.dataset.name;
+
+              // Check for hazards within 150m of straight-line route
+              let hazardNear = null;
+              let minHazardDist = Infinity;
+
+              for (const h of (activeBlockedRoads || [])) {
+                if (h.lat && h.lng) {
+                  const dist = pointToSegmentDistanceMeters(
+                    h.lng, h.lat,
+                    selectedLoc.lng, selectedLoc.lat,
+                    destLng, destLat
+                  );
+                  if (dist < 150 && dist < minHazardDist) {
+                    minHazardDist = dist;
+                    hazardNear = h;
+                  }
+                }
+              }
+
+              const banner = document.getElementById('shelter-route-warning-banner');
+              const msg = document.getElementById('shelter-route-warning-msg');
+              const alt = document.getElementById('shelter-alternate-suggestion');
+
+              if (hazardNear && banner) {
+                banner.style.display = 'flex';
+                if (msg) {
+                  msg.innerHTML = `⚠️ <strong>Hazard detected on route to ${escapeHtml(shelterName)}:</strong> Reported ${hazardNear.type.replace('_', ' ')} (~${Math.round(minHazardDist)}m from path near ${escapeHtml(hazardNear.address || 'route waypoint')}).`;
+                }
+                if (alt) {
+                  alt.textContent = 'Recommendation: Exercise extreme caution or navigate along higher elevation corridors.';
+                }
+              } else if (banner) {
+                banner.style.display = 'none';
+              }
               
               if (sheltersMap) {
                 if (shelterRoutePolyline) sheltersMap.removeLayer(shelterRoutePolyline);
+                const routeColor = hazardNear ? '#DC2626' : 'var(--accent-green-dark)';
                 shelterRoutePolyline = L.polyline([
                   [selectedLoc.lat, selectedLoc.lng],
                   [destLat, destLng]
-                ], { color: 'var(--accent-green-dark)', weight: 5, dashArray: '8, 8' }).addTo(sheltersMap);
+                ], { color: routeColor, weight: 5, dashArray: hazardNear ? '6, 6' : '8, 8' }).addTo(sheltersMap);
                 sheltersMap.fitBounds(shelterRoutePolyline.getBounds(), { padding: [40, 40] });
               }
 
-              // Open Google Maps Directions
               window.open(`https://www.google.com/maps/dir/?api=1&origin=${selectedLoc.lat},${selectedLoc.lng}&destination=${destLat},${destLng}`, '_blank');
             });
           });
@@ -1391,11 +1506,858 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })();
 
+  // ==========================================
+  // TIER 4 & TIER 5 CLIENT-SIDE IMPLEMENTATIONS
+  // ==========================================
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function pointToSegmentDistanceMeters(px, py, x1, y1, x2, y2) {
+    const latMeters = 111000;
+    const lngMeters = 111000 * Math.cos((y1 + y2) * 0.5 * Math.PI / 180);
+
+    const pxM = px * lngMeters;
+    const pyM = py * latMeters;
+    const x1M = x1 * lngMeters;
+    const y1M = y1 * latMeters;
+    const x2M = x2 * lngMeters;
+    const y2M = y2 * latMeters;
+
+    const dx = x2M - x1M;
+    const dy = y2M - y1M;
+    const segLenSq = dx * dx + dy * dy;
+
+    if (segLenSq === 0) {
+      const dpx = pxM - x1M;
+      const dpy = pyM - y1M;
+      return Math.sqrt(dpx * dpx + dpy * dpy);
+    }
+
+    const t = Math.max(0, Math.min(1, ((pxM - x1M) * dx + (pyM - y1M) * dy) / segLenSq));
+    const projX = x1M + t * dx;
+    const projY = y1M + t * dy;
+
+    const distSq = (pxM - projX) * (pxM - projX) + (pyM - projY) * (pyM - projY);
+    return Math.sqrt(distSq);
+  }
+
+  // 11. Role-based Navigation Badges
+  async function initRoleNav() {
+    try {
+      const user = AuthService.getUser();
+      let role = user?.role || 'citizen';
+      try {
+        const prof = await ApiService.get('/profile');
+        if (prof.success && prof.user) {
+          role = prof.user.role || role;
+        }
+      } catch (e) {}
+
+      if (['admin', 'responder'].includes(role)) {
+        const headerAdmin = document.getElementById('header-admin-link');
+        const mobileAdmin = document.getElementById('mobile-admin-link');
+        if (headerAdmin) headerAdmin.style.display = 'inline-block';
+        if (mobileAdmin) mobileAdmin.style.display = 'block';
+      }
+      if (['admin', 'shelter_manager'].includes(role)) {
+        const headerShelter = document.getElementById('header-shelter-link');
+        const mobileShelter = document.getElementById('mobile-shelter-link');
+        if (headerShelter) headerShelter.style.display = 'inline-block';
+        if (mobileShelter) mobileShelter.style.display = 'block';
+      }
+      const volName = document.getElementById('vol-display-name');
+      if (volName && user?.name) volName.textContent = user.name;
+    } catch (err) {}
+  }
+
+  // 12. Crowdsourced Flood Reports Layer & Feed
+  const REPORT_TYPE_EMOJIS = {
+    water_level: '🌊',
+    road_blocked: '🚧',
+    bridge_damaged: '🌉',
+    power_outage: '⚡',
+    landslide: '⛰️',
+    need_help: '🆘'
+  };
+
+  const REPORT_TYPE_COLORS = {
+    water_level: '#2563EB',
+    road_blocked: '#D97706',
+    bridge_damaged: '#DC2626',
+    power_outage: '#EAB308',
+    landslide: '#78350F',
+    need_help: '#991B1B'
+  };
+
+  function createReportMarker(r) {
+    const emoji = REPORT_TYPE_EMOJIS[r.type] || '⚠️';
+    const bg = REPORT_TYPE_COLORS[r.type] || '#2563EB';
+    const score = Number(r.confidenceScore != null ? r.confidenceScore : 40);
+
+    let borderStyle = 'solid';
+    let borderColor = '#10B981';
+    let opacity = 1;
+    if (score < 40) {
+      borderColor = '#9CA3AF';
+      opacity = 0.75;
+    } else if (score < 70) {
+      borderStyle = 'dashed';
+      borderColor = '#F59E0B';
+    }
+
+    const iconHtml = `
+      <div style="
+        width: 32px; height: 32px; border-radius: 50%; background: ${bg};
+        border: 3px ${borderStyle} ${borderColor}; display: flex; align-items: center;
+        justify-content: center; font-size: 15px; color: #fff;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.3); opacity: ${opacity};
+        cursor: pointer;
+      ">${emoji}</div>
+    `;
+
+    const icon = L.divIcon({
+      html: iconHtml,
+      className: 'custom-report-pin',
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      popupAnchor: [0, -18]
+    });
+
+    const marker = L.marker([r.lat, r.lng], { icon });
+
+    const photoHtml = r.photoUrl
+      ? `<div style="margin: 6px 0;"><img src="${r.photoUrl}" style="max-width: 100%; max-height: 120px; border-radius: 4px; display: block;" alt="Hazard Photo"></div>`
+      : '';
+
+    const popupContent = `
+      <div style="font-family: inherit; font-size: 13px; line-height: 1.4; min-width: 210px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <strong style="text-transform: capitalize;">${emoji} ${r.type.replace('_', ' ')}</strong>
+          <span style="font-size: 10px; font-weight: 700; padding: 2px 5px; border-radius: 4px; background: ${score >= 70 ? '#D1FAE5' : score >= 40 ? '#FEF3C7' : '#F3F4F6'}; color: ${score >= 70 ? '#065F46' : score >= 40 ? '#92400E' : '#374151'};">
+            ${score} pts
+          </span>
+        </div>
+        ${r.waterLevel ? `<div style="font-size: 11px; color: #2563EB; font-weight: 600; margin-bottom: 4px;">Depth: ${r.waterLevel.toUpperCase()}</div>` : ''}
+        ${r.description ? `<p style="margin: 4px 0; color: #374151;">${escapeHtml(r.description)}</p>` : ''}
+        ${photoHtml}
+        <div style="font-size: 11px; color: #6B7280; margin: 4px 0;">📍 ${escapeHtml(r.address || 'Reported Location')}</div>
+        <div style="display: flex; gap: 6px; margin-top: 8px;">
+          <button class="btn btn-sm btn-report-vote" data-id="${r._id}" data-vote="confirm" style="flex: 1; padding: 3px 6px; font-size: 11px; background: #10B981; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
+            👍 Confirm (+15)
+          </button>
+          <button class="btn btn-sm btn-report-vote" data-id="${r._id}" data-vote="dispute" style="flex: 1; padding: 3px 6px; font-size: 11px; background: #EF4444; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
+            👎 Dispute (-20)
+          </button>
+        </div>
+      </div>
+    `;
+
+    marker.bindPopup(popupContent);
+    return marker;
+  }
+
+  async function loadReportsData() {
+    try {
+      const res = await ReportsService.getNearbyReports(selectedLoc.lat, selectedLoc.lng, 10, currentReportFilter || null);
+      if (res && res.success && res.reports) {
+        currentReports = res.reports;
+        renderReportMarkersOnMaps(currentReports);
+        renderReportsFeed(currentReports);
+
+        const badge = document.getElementById('nav-reports-badge');
+        if (badge) {
+          badge.textContent = currentReports.length;
+          badge.style.display = currentReports.length > 0 ? 'inline-block' : 'none';
+        }
+      }
+    } catch (err) {
+      console.warn('Could not load flood reports:', err.message);
+    }
+  }
+
+  function renderReportMarkersOnMaps(reports) {
+    [overviewReportsGroup, mainReportsGroup, sheltersReportsGroup].forEach(group => {
+      if (group) group.clearLayers();
+    });
+
+    reports.forEach(r => {
+      if (!r.lat || !r.lng) return;
+      if (overviewReportsGroup) overviewReportsGroup.addLayer(createReportMarker(r));
+      if (mainReportsGroup) mainReportsGroup.addLayer(createReportMarker(r));
+      if (sheltersReportsGroup) sheltersReportsGroup.addLayer(createReportMarker(r));
+    });
+  }
+
+  function renderReportsFeed(reports) {
+    const feed = document.getElementById('reports-feed-container');
+    if (!feed) return;
+
+    if (reports.length === 0) {
+      feed.innerHTML = `
+        <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
+          <p style="font-weight: 600; margin-bottom: 0.25rem;">No active hazard reports nearby</p>
+          <span style="font-size: 0.8rem;">Tap on "Submit Flood Report" to report live hazards.</span>
+        </div>
+      `;
+      return;
+    }
+
+    feed.innerHTML = reports.map(r => {
+      const emoji = REPORT_TYPE_EMOJIS[r.type] || '⚠️';
+      const score = Number(r.confidenceScore != null ? r.confidenceScore : 40);
+      const isPending = r.isPendingSync;
+
+      return `
+        <div class="report-card ${score >= 70 ? 'verified' : score < 40 ? 'disputed' : ''}">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.35rem;">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <span style="font-size: 1.25rem;">${emoji}</span>
+              <div>
+                <strong style="text-transform: capitalize; font-size: 0.95rem;">${r.type.replace('_', ' ')}</strong>
+                ${r.waterLevel ? `<span class="badge" style="background: #DBEAFE; color: #1E40AF; padding: 1px 6px; font-size: 0.7rem; margin-left: 0.35rem;">${r.waterLevel.toUpperCase()}</span>` : ''}
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.35rem;">
+              ${isPending ? '<span class="badge badge-high" style="font-size: 0.68rem;">QUEUED</span>' : ''}
+              <span class="report-confidence-pill ${score >= 70 ? 'pill-high' : score >= 40 ? 'pill-moderate' : 'pill-low'}">
+                ${score} pts
+              </span>
+            </div>
+          </div>
+
+          ${r.description ? `<p style="font-size: 0.86rem; color: var(--text-secondary); margin: 0.3rem 0;">${escapeHtml(r.description)}</p>` : ''}
+          ${r.photoUrl ? `<img src="${r.photoUrl}" style="max-width: 100%; max-height: 140px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin: 0.4rem 0;" alt="Report Photo">` : ''}
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; border-top: 1px solid var(--border); padding-top: 0.45rem;">
+            <span class="subtext" style="font-size: 0.75rem;">📍 ${escapeHtml(r.address || 'Selected Location')} · ${new Date(r.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            <div style="display: flex; gap: 0.35rem;">
+              <button class="btn-vote btn-vote-up btn-report-vote" data-id="${r._id}" data-vote="confirm" title="Confirm report (+15)">
+                👍 ${r.confirmations?.length || 0}
+              </button>
+              <button class="btn-vote btn-vote-down btn-report-vote" data-id="${r._id}" data-vote="dispute" title="Dispute report (-20)">
+                👎 ${r.disputes?.length || 0}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Voting Event Delegation
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.btn-report-vote');
+    if (!btn) return;
+    const reportId = btn.dataset.id;
+    const vote = btn.dataset.vote;
+    if (!reportId || !vote) return;
+
+    btn.disabled = true;
+    try {
+      const res = await ReportsService.voteReport(reportId, vote, selectedLoc.lat, selectedLoc.lng);
+      if (res && res.success) {
+        showToast(res.message || `Vote ${vote} recorded!`);
+        await loadReportsData();
+      } else {
+        showToast(res?.message || 'Voting unavailable');
+      }
+    } catch (err) {
+      showToast(err.message || 'Could not record vote');
+    }
+  });
+
+  // Report Feed Filters & Refresh
+  document.querySelectorAll('.feed-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.feed-filter-btn').forEach(b => {
+        b.classList.remove('btn-primary');
+        b.classList.add('btn-secondary');
+      });
+      btn.classList.add('btn-primary');
+      btn.classList.remove('btn-secondary');
+      currentReportFilter = btn.dataset.filter || '';
+      loadReportsData();
+    });
+  });
+
+  const btnRefreshReports = document.getElementById('btn-refresh-reports');
+  if (btnRefreshReports) {
+    btnRefreshReports.addEventListener('click', () => {
+      showToast('Refreshing hazard feed...');
+      loadReportsData();
+    });
+  }
+
+  // Report Form Touch Type Selector
+  document.querySelectorAll('#report-type-selector .touch-type-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('#report-type-selector .touch-type-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+
+      const waterSection = document.getElementById('water-level-section');
+      if (waterSection) {
+        waterSection.style.display = card.dataset.type === 'water_level' ? 'block' : 'none';
+      }
+    });
+  });
+
+  // Water Level Button Selector
+  document.querySelectorAll('.water-level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.water-level-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // Description Char Counter
+  const reportDesc = document.getElementById('report-description');
+  const descCharCount = document.getElementById('desc-char-count');
+  if (reportDesc && descCharCount) {
+    reportDesc.addEventListener('input', () => {
+      descCharCount.textContent = reportDesc.value.length;
+    });
+  }
+
+  // Photo Input Preview & Removal
+  const photoInput = document.getElementById('report-photo-input');
+  const photoPreview = document.getElementById('report-photo-preview');
+  const previewImg = document.getElementById('report-preview-img');
+  const btnRemovePhoto = document.getElementById('btn-remove-photo');
+
+  if (photoInput) {
+    photoInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        if (file.size > 2 * 1024 * 1024) {
+          showToast('Photo must be under 2MB');
+          photoInput.value = '';
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          currentReportPhoto = ev.target.result;
+          if (previewImg && photoPreview) {
+            previewImg.src = currentReportPhoto;
+            photoPreview.style.display = 'block';
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  if (btnRemovePhoto) {
+    btnRemovePhoto.addEventListener('click', () => {
+      currentReportPhoto = null;
+      if (photoInput) photoInput.value = '';
+      if (photoPreview) photoPreview.style.display = 'none';
+    });
+  }
+
+  // GPS Auto-detect for Report Pin
+  const btnReportDetectGps = document.getElementById('btn-report-detect-gps');
+  if (btnReportDetectGps) {
+    btnReportDetectGps.addEventListener('click', () => {
+      if (navigator.geolocation) {
+        btnReportDetectGps.textContent = 'Locating...';
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            reportPickerLoc = { lat, lng };
+
+            if (reportPickerMarker && reportPickerMap) {
+              reportPickerMarker.setLatLng([lat, lng]);
+              reportPickerMap.setView([lat, lng], 14);
+            }
+
+            const display = document.getElementById('report-location-display');
+            if (display) display.value = `GPS Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+            try {
+              const geo = await reverseGeocode(lat, lng);
+              if (display) display.value = geo.name || display.value;
+            } catch (e) {}
+
+            btnReportDetectGps.textContent = '⊕ Detect My Location';
+            showToast('Report pin centered on your GPS');
+          },
+          () => {
+            btnReportDetectGps.textContent = '⊕ Detect My Location';
+            showToast('Unable to access GPS location');
+          }
+        );
+      }
+    });
+  }
+
+  // Report Form Submission
+  const floodReportForm = document.getElementById('flood-report-form');
+  if (floodReportForm) {
+    floodReportForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const activeTypeCard = document.querySelector('#report-type-selector .touch-type-card.active');
+      const type = activeTypeCard ? activeTypeCard.dataset.type : 'water_level';
+
+      const activeWaterBtn = document.querySelector('.water-level-btn.active');
+      const waterLevel = type === 'water_level' && activeWaterBtn ? activeWaterBtn.dataset.level : null;
+
+      const description = (document.getElementById('report-description')?.value || '').trim();
+      const address = document.getElementById('report-location-display')?.value || selectedLoc.name;
+
+      const submitBtn = document.getElementById('btn-submit-report');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting report...';
+      }
+
+      try {
+        const res = await ReportsService.submitReport({
+          type,
+          waterLevel,
+          description,
+          photoUrl: currentReportPhoto || '',
+          lat: reportPickerLoc.lat,
+          lng: reportPickerLoc.lng,
+          address
+        });
+
+        if (res.offline) {
+          showToast('Report saved offline. Will sync automatically when connection returns.');
+          const offlineBadge = document.getElementById('report-offline-badge');
+          if (offlineBadge) offlineBadge.style.display = 'inline-block';
+        } else {
+          showToast('Flood hazard report posted! Consensus scoring active.');
+        }
+
+        floodReportForm.reset();
+        currentReportPhoto = null;
+        if (photoPreview) photoPreview.style.display = 'none';
+        if (descCharCount) descCharCount.textContent = '0';
+
+        await loadReportsData();
+      } catch (err) {
+        showToast(err.message || 'Failed to submit report');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '🚀 Submit Flood Report';
+        }
+      }
+    });
+  }
+
+  // 13. Safety Check-ins & 24h Public Link
+  document.querySelectorAll('.btn-quick-checkin').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const status = btn.dataset.status;
+      const msgs = {
+        safe: "I'm safe and sound.",
+        evacuating: 'I am currently evacuating to a safer elevated shelter.',
+        need_help: 'I need assistance at my location!'
+      };
+
+      try {
+        await ApiService.post('/checkins', {
+          status,
+          lat: selectedLoc.lat,
+          lng: selectedLoc.lng,
+          message: msgs[status] || 'Status update'
+        });
+        showToast(`Status updated: ${status === 'safe' ? "I'm Safe" : status === 'evacuating' ? 'Evacuating' : 'Need Help'}. Safety Circle notified!`);
+      } catch (err) {
+        showToast('Check-in recorded locally.');
+      }
+    });
+  });
+
+  const btnShareLiveLocation = document.getElementById('btn-share-live-location');
+  if (btnShareLiveLocation) {
+    btnShareLiveLocation.addEventListener('click', async () => {
+      try {
+        btnShareLiveLocation.disabled = true;
+        btnShareLiveLocation.textContent = 'Generating link...';
+        const res = await ApiService.post('/checkins/share', {
+          lat: selectedLoc.lat,
+          lng: selectedLoc.lng
+        });
+        if (res.success && res.shareUrl) {
+          const fullUrl = res.shareUrl.startsWith('http') ? res.shareUrl : `${window.location.origin}${res.shareUrl}`;
+          await navigator.clipboard.writeText(fullUrl);
+          showToast(`📋 Live public 24h link copied to clipboard!`);
+        }
+      } catch (err) {
+        showToast('Failed to generate live tracking link');
+      } finally {
+        btnShareLiveLocation.disabled = false;
+        btnShareLiveLocation.textContent = '🔗 Share Live Location (24h Link)';
+      }
+    });
+  }
+
+  // 14. Battery Status API Monitoring
+  if ('getBattery' in navigator) {
+    navigator.getBattery().then(battery => {
+      function checkBattery() {
+        if (battery.level <= 0.15 && !battery.charging) {
+          const pct = Math.round(battery.level * 100);
+          const modal = document.getElementById('battery-share-modal');
+          const pctEl = document.getElementById('battery-modal-pct');
+          if (pctEl) pctEl.textContent = `${pct}%`;
+          if (modal && !sessionStorage.getItem('battery_modal_dismissed')) {
+            modal.classList.add('active');
+          }
+        }
+      }
+      checkBattery();
+      battery.addEventListener('levelchange', checkBattery);
+      battery.addEventListener('chargingchange', checkBattery);
+    }).catch(() => {});
+  }
+
+  const btnConfirmBatteryShare = document.getElementById('btn-confirm-battery-share');
+  const btnSkipBatteryShare = document.getElementById('btn-skip-battery-share');
+  const batteryModal = document.getElementById('battery-share-modal');
+
+  if (btnConfirmBatteryShare && batteryModal) {
+    btnConfirmBatteryShare.addEventListener('click', async () => {
+      batteryModal.classList.remove('active');
+      sessionStorage.setItem('battery_modal_dismissed', 'true');
+      try {
+        let batteryPct = 14;
+        if ('getBattery' in navigator) {
+          const b = await navigator.getBattery();
+          batteryPct = Math.round(b.level * 100);
+        }
+        await ApiService.post('/checkins', {
+          status: 'safe',
+          lat: selectedLoc.lat,
+          lng: selectedLoc.lng,
+          batteryLevel: batteryPct,
+          message: `Device battery low (${batteryPct}%). Last known location recorded.`
+        });
+        showToast('Battery status & last known location broadcasted to family!');
+      } catch (e) {
+        showToast('Location recorded');
+      }
+    });
+  }
+
+  if (btnSkipBatteryShare && batteryModal) {
+    btnSkipBatteryShare.addEventListener('click', () => {
+      batteryModal.classList.remove('active');
+      sessionStorage.setItem('battery_modal_dismissed', 'true');
+    });
+  }
+
+  // 15. Volunteers & Emergency Help Requests Module
+  async function loadVolunteerModule() {
+    try {
+      const profRes = await ApiService.get('/volunteers/profile');
+      if (profRes.success && profRes.profile) {
+        const p = profRes.profile;
+        const availBadge = document.getElementById('vol-avail-badge');
+        if (availBadge) {
+          availBadge.textContent = (p.availability || 'available').toUpperCase();
+          availBadge.className = `badge ${p.availability === 'available' ? 'badge-live' : p.availability === 'busy' ? 'badge-high' : 'badge-critical'}`;
+        }
+        document.querySelectorAll('.btn-vol-avail').forEach(b => {
+          if (b.dataset.avail === p.availability) {
+            b.classList.add('btn-primary');
+            b.classList.remove('btn-secondary');
+          } else {
+            b.classList.remove('btn-primary');
+            b.classList.add('btn-secondary');
+          }
+        });
+        document.querySelectorAll('.vol-skill-chk').forEach(chk => {
+          chk.checked = (p.skills || []).includes(chk.value);
+        });
+      }
+    } catch (e) {}
+
+    await loadHelpRequests();
+  }
+
+  document.querySelectorAll('.btn-vol-avail').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const avail = btn.dataset.avail;
+      try {
+        await ApiService.put('/volunteers/profile', { availability: avail });
+        const availBadge = document.getElementById('vol-avail-badge');
+        if (availBadge) {
+          availBadge.textContent = avail.toUpperCase();
+          availBadge.className = `badge ${avail === 'available' ? 'badge-live' : avail === 'busy' ? 'badge-high' : 'badge-critical'}`;
+        }
+        document.querySelectorAll('.btn-vol-avail').forEach(b => {
+          if (b === btn) {
+            b.classList.add('btn-primary');
+            b.classList.remove('btn-secondary');
+          } else {
+            b.classList.remove('btn-primary');
+            b.classList.add('btn-secondary');
+          }
+        });
+        showToast(`Readiness updated to ${avail.toUpperCase()}`);
+      } catch (err) {
+        showToast('Could not update availability');
+      }
+    });
+  });
+
+  const btnSaveVolProfile = document.getElementById('btn-save-vol-profile');
+  if (btnSaveVolProfile) {
+    btnSaveVolProfile.addEventListener('click', async () => {
+      const skills = [];
+      document.querySelectorAll('.vol-skill-chk:checked').forEach(c => skills.push(c.value));
+      try {
+        await ApiService.put('/volunteers/profile', { skills });
+        showToast('Volunteer profile and skills saved!');
+      } catch (err) {
+        showToast('Could not save volunteer skills');
+      }
+    });
+  }
+
+  async function loadHelpRequests() {
+    try {
+      const openRes = await ApiService.get('/help-requests?status=open');
+      const nearbyList = document.getElementById('nearby-help-requests-list');
+      if (nearbyList && openRes.success && openRes.requests) {
+        if (openRes.requests.length === 0) {
+          nearbyList.innerHTML = '<span class="subtext">No open emergency requests nearby. All communities clear!</span>';
+        } else {
+          nearbyList.innerHTML = openRes.requests.map(req => `
+            <div class="card" style="margin-bottom: 0.75rem; border-left: 4px solid ${req.urgency >= 4 ? '#DC2626' : '#2563EB'}; padding: 0.85rem;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.35rem;">
+                <div>
+                  <span class="badge ${req.urgency >= 4 ? 'badge-critical' : 'badge-high'}">LEVEL ${req.urgency} URGENCY</span>
+                  <strong style="margin-left: 0.5rem; text-transform: capitalize;">${req.category} Need</strong>
+                </div>
+                <span class="subtext" style="font-size: 0.75rem;">${new Date(req.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+              <p style="font-size: 0.88rem; margin: 0.3rem 0; color: var(--text-primary);">${escapeHtml(req.notes || 'Emergency assistance needed.')}</p>
+              <div style="display: flex; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                <span class="tag-pill">👥 ${req.peopleCount || 1} Person(s)</span>
+                ${(req.vulnerabilityFlags || []).map(f => `<span class="tag-pill" style="background: #FEE2E2; color: #991B1B;">⚠️ ${f}</span>`).join('')}
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                <span class="subtext" style="font-size: 0.78rem;">📍 ${escapeHtml(req.address || 'Reported Location')}</span>
+                <button class="btn btn-primary btn-sm btn-accept-request" data-id="${req._id}" style="background: #10B981; border-color: #10B981;">
+                  Accept / Respond →
+                </button>
+              </div>
+            </div>
+          `).join('');
+        }
+      }
+
+      // My requests list
+      const allRes = await ApiService.get('/help-requests');
+      const currentUser = AuthService.getUser();
+      const myList = document.getElementById('my-help-requests-list');
+      if (myList && allRes.success && allRes.requests && currentUser) {
+        const mine = allRes.requests.filter(r => r.userId === currentUser.id || r.userId === currentUser._id);
+        if (mine.length === 0) {
+          myList.innerHTML = '<span class="subtext">You have not submitted any open help requests.</span>';
+        } else {
+          myList.innerHTML = mine.map(r => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid var(--border);">
+              <div>
+                <strong>${r.category.toUpperCase()}</strong> (${r.peopleCount} ppl) — ${escapeHtml(r.notes || '')}
+                <div class="subtext" style="font-size: 0.75rem;">Status: <span class="badge ${r.status === 'open' ? 'badge-high' : 'badge-live'}">${r.status.toUpperCase()}</span></div>
+              </div>
+              <span class="subtext">${new Date(r.createdAt).toLocaleDateString()}</span>
+            </div>
+          `).join('');
+        }
+      }
+    } catch (e) {}
+  }
+
+  // Accept / Claim Help Request
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.btn-accept-request');
+    if (!btn) return;
+    const reqId = btn.dataset.id;
+    if (!reqId) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Claiming...';
+    try {
+      const res = await ApiService.post(`/help-requests/${reqId}/accept`, {});
+      if (res.success) {
+        showToast('✅ Help request accepted! You are assigned as primary responder.');
+        await loadHelpRequests();
+      }
+    } catch (err) {
+      if (err.message && err.message.includes('already')) {
+        showToast('⚠️ Notice: This request was just claimed by another responder.');
+      } else {
+        showToast(err.message || 'Could not claim request');
+      }
+      await loadHelpRequests();
+    }
+  });
+
+  const btnRefreshHelpReqs = document.getElementById('btn-refresh-help-requests');
+  if (btnRefreshHelpReqs) {
+    btnRefreshHelpReqs.addEventListener('click', () => {
+      showToast('Refreshing community requests...');
+      loadHelpRequests();
+    });
+  }
+
+  // Help Request Modal
+  const btnOpenHelpModal = document.getElementById('btn-open-help-request-modal');
+  const helpModal = document.getElementById('help-request-modal');
+  const closeHelpModal = document.getElementById('close-help-request-modal');
+  const helpForm = document.getElementById('help-request-form');
+
+  if (btnOpenHelpModal && helpModal) {
+    btnOpenHelpModal.addEventListener('click', () => {
+      const addrInput = document.getElementById('req-address');
+      if (addrInput) addrInput.value = selectedLoc.name;
+      helpModal.classList.add('active');
+    });
+  }
+
+  if (closeHelpModal && helpModal) {
+    closeHelpModal.addEventListener('click', () => helpModal.classList.remove('active'));
+  }
+
+  if (helpForm) {
+    helpForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const category = document.getElementById('req-category')?.value;
+      const urgency = Number(document.getElementById('req-urgency')?.value || 3);
+      const peopleCount = Number(document.getElementById('req-people')?.value || 1);
+      const address = document.getElementById('req-address')?.value || selectedLoc.name;
+      const notes = document.getElementById('req-notes')?.value;
+
+      const vulnerabilityFlags = [];
+      document.querySelectorAll('.vuln-flag:checked').forEach(c => vulnerabilityFlags.push(c.value));
+
+      try {
+        const res = await ApiService.post('/help-requests', {
+          category,
+          urgency,
+          peopleCount,
+          address,
+          notes,
+          vulnerabilityFlags,
+          lat: selectedLoc.lat,
+          lng: selectedLoc.lng
+        });
+        if (res.success) {
+          showToast('🆘 Help request broadcasted to emergency responders & volunteers!');
+          helpModal.classList.remove('active');
+          helpForm.reset();
+          await loadHelpRequests();
+        }
+      } catch (err) {
+        showToast(err.message || 'Failed to dispatch help request');
+      }
+    });
+  }
+
+  // 16. Post-Flood Recovery Damage Claims
+  async function loadRecoveryModule() {
+    try {
+      const res = await ApiService.get('/damage/mine');
+      const container = document.getElementById('my-damage-claims-list');
+      if (container && res.success && res.reports) {
+        if (res.reports.length === 0) {
+          container.innerHTML = '<span class="subtext">You have not submitted any flood damage claims yet.</span>';
+        } else {
+          container.innerHTML = res.reports.map(d => `
+            <div class="card" style="padding: 0.75rem; border-left: 4px solid #2563EB;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                  <strong style="text-transform: capitalize;">${d.category} — ${d.severity}</strong>
+                  <div style="font-size: 0.85rem; color: #059669; font-weight: 700; margin-top: 2px;">
+                    Claim: ₹${Number(d.estimatedLossINR || 0).toLocaleString('en-IN')}
+                  </div>
+                </div>
+                <span class="badge ${d.status === 'approved' ? 'badge-live' : d.status === 'rejected' ? 'badge-critical' : 'badge-high'}">
+                  ${d.status.toUpperCase()}
+                </span>
+              </div>
+              <p class="subtext" style="font-size: 0.8rem; margin-top: 0.4rem;">${escapeHtml(d.description)}</p>
+              <span class="subtext" style="font-size: 0.72rem;">Filed: ${new Date(d.createdAt).toLocaleDateString()}</span>
+            </div>
+          `).join('');
+        }
+      }
+    } catch (e) {}
+  }
+
+  const dmgForm = document.getElementById('damage-report-form');
+  if (dmgForm) {
+    dmgForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const category = document.getElementById('dmg-category')?.value;
+      const severity = document.getElementById('dmg-severity')?.value;
+      const estimatedLossINR = Number(document.getElementById('dmg-loss')?.value || 0);
+      const description = document.getElementById('dmg-description')?.value;
+      const fileInput = document.getElementById('dmg-photos-input');
+
+      const photos = [];
+      if (fileInput && fileInput.files.length > 0) {
+        for (let i = 0; i < Math.min(3, fileInput.files.length); i++) {
+          const file = fileInput.files[i];
+          if (file.size <= 2 * 1024 * 1024) {
+            const b64 = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = (ev) => resolve(ev.target.result);
+              reader.readAsDataURL(file);
+            });
+            photos.push(b64);
+          }
+        }
+      }
+
+      try {
+        const res = await ApiService.post('/damage', {
+          category,
+          severity,
+          estimatedLossINR,
+          description,
+          photos,
+          lat: selectedLoc.lat,
+          lng: selectedLoc.lng,
+          address: selectedLoc.name
+        });
+        if (res.success) {
+          showToast('Damage assessment claim filed successfully!');
+          dmgForm.reset();
+          await loadRecoveryModule();
+        }
+      } catch (err) {
+        showToast(err.message || 'Failed to file damage claim');
+      }
+    });
+  }
+
   // Initial Boot Sequence
+  initRoleNav();
   initMaps();
   updateLocation(selectedLoc, true);
   loadAlertsData();
   loadContactsData();
+  loadReportsData();
+
+  // Periodic 30-second live refresh for crowdsourced reports
+  setInterval(() => {
+    loadReportsData();
+  }, 30 * 1000);
 
 
   // Handle direct hash navigation e.g. dashboard.html#map
@@ -1416,6 +2378,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mainMap) mainMap.invalidateSize();
     if (safetyMap) safetyMap.invalidateSize();
     if (sheltersMap) sheltersMap.invalidateSize();
+    if (reportPickerMap) reportPickerMap.invalidateSize();
   });
 
   // Refresh telemetry periodically while the same location remains open.

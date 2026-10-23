@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shelter Operations Manager — FloodSAHAAY</title>
+  <link rel="icon" type="image/png" href="../assets/limitlez-favicon.png">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: var(--bg-surface);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .manager-container {
+      max-width: 640px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+      width: 100%;
+    }
+    .touch-counter-btn {
+      min-height: 64px;
+      font-size: 1.5rem;
+      font-weight: 800;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.1s ease, filter 0.1s ease;
+    }
+    .touch-counter-btn:active {
+      transform: scale(0.96);
+    }
+    .supply-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+    .supply-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem;
+      text-align: center;
+    }
+    .supply-btn-group {
+      display: flex;
+      gap: 4px;
+      margin-top: 0.5rem;
+    }
+    .supply-btn {
+      flex: 1;
+      padding: 0.4rem 0;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #FFFFFF;
+      cursor: pointer;
+    }
+    .supply-btn.active-ok { background: #10B981; color: #FFF; border-color: #10B981; }
+    .supply-btn.active-low { background: #F59E0B; color: #FFF; border-color: #F59E0B; }
+    .supply-btn.active-out { background: #DC2626; color: #FFF; border-color: #DC2626; }
+  </style>
+</head>
+<body>
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <header class="header-nav" style="justify-content: space-between;">
+    <div class="logo" style="cursor: pointer;" onclick="window.location.href='dashboard.html'">
+      <div class="logo-icon" style="background: #8B5CF6;">~</div>
+      <span>FloodSAHAAY</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <span class="badge" style="background: #8B5CF6; color: #FFF; font-weight: 700;">SHELTER OPS</span>
+      <a href="dashboard.html" class="btn btn-secondary btn-sm">Citizen View</a>
+    </div>
+  </header>
+
+  <main class="manager-container">
+    
+    <!-- Shelter Selector if manager manages multiple or admin -->
+    <div style="margin-bottom: 1.25rem;">
+      <label class="label-caps">ACTIVE FACILITY</label>
+      <select id="shelter-select" class="input" style="font-weight: 600; font-size: 1rem;"></select>
+    </div>
+
+    <!-- Live Occupancy Card -->
+    <div class="card" style="margin-bottom: 1.5rem; text-align: center; padding: 2rem 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <span class="label-caps">LIVE CAPACITY METER</span>
+        <span id="shelter-status-badge" class="badge badge-live">OPEN</span>
+      </div>
+
+      <div style="display: flex; justify-content: center; align-items: baseline; gap: 0.5rem; margin: 1rem 0;">
+        <span id="display-occupancy" style="font-size: 4.5rem; font-weight: 900; line-height: 1; color: var(--text-primary);">--</span>
+        <span id="display-capacity" style="font-size: 1.8rem; font-weight: 700; color: var(--text-muted);">/ --</span>
+      </div>
+
+      <!-- Meter Progress Bar -->
+      <div style="height: 12px; background: #E5E7EB; border-radius: 6px; overflow: hidden; margin-bottom: 0.5rem;">
+        <div id="occupancy-progress" style="height: 100%; width: 0%; background: #10B981; border-radius: 6px; transition: width 0.3s ease, background 0.3s ease;"></div>
+      </div>
+      <p id="occupancy-pct-text" class="subtext" style="font-weight: 600;">0% space occupied</p>
+
+      <!-- Large Mobile Touch Action Buttons -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1.5rem;">
+        <button id="btn-add-1" class="btn btn-primary touch-counter-btn" style="background: #10B981; border-color: #10B981;">
+          +1 Evacuee
+        </button>
+        <button id="btn-sub-1" class="btn btn-secondary touch-counter-btn" style="background: #F3F4F6;">
+          -1 Left
+        </button>
+        <button id="btn-add-5" class="btn btn-primary touch-counter-btn" style="background: #059669; border-color: #059669;">
+          +5 Group
+        </button>
+        <button id="btn-sub-5" class="btn btn-secondary touch-counter-btn" style="background: #E5E7EB;">
+          -5 Group
+        </button>
+      </div>
+    </div>
+
+    <!-- Supplies & Resources Management -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h3 class="heading-md" style="margin: 0;">Supply Status</h3>
+          <p class="subtext">Tap to update current emergency supply availability</p>
+        </div>
+        <span class="subtext" id="supplies-updated-at">Just now</span>
+      </div>
+
+      <div class="supply-grid">
+        <!-- Food -->
+        <div class="supply-card" data-resource="food">
+          <span style="font-size: 1.3rem;">🍲</span>
+          <p style="font-weight: 700; font-size: 0.88rem; margin: 0.2rem 0;">Food Supplies</p>
+          <div class="supply-btn-group">
+            <button class="supply-btn active-ok" data-val="ok">OK</button>
+            <button class="supply-btn" data-val="low">LOW</button>
+            <button class="supply-btn" data-val="out">OUT</button>
+          </div>
+        </div>
+
+        <!-- Water -->
+        <div class="supply-card" data-resource="water">
+          <span style="font-size: 1.3rem;">💧</span>
+          <p style="font-weight: 700; font-size: 0.88rem; margin: 0.2rem 0;">Drinking Water</p>
+          <div class="supply-btn-group">
+            <button class="supply-btn active-ok" data-val="ok">OK</button>
+            <button class="supply-btn" data-val="low">LOW</button>
+            <button class="supply-btn" data-val="out">OUT</button>
+          </div>
+        </div>
+
+        <!-- Medicine -->
+        <div class="supply-card" data-resource="medicine">
+          <span style="font-size: 1.3rem;">💊</span>
+          <p style="font-weight: 700; font-size: 0.88rem; margin: 0.2rem 0;">First Aid / Meds</p>
+          <div class="supply-btn-group">
+            <button class="supply-btn active-ok" data-val="ok">OK</button>
+            <button class="supply-btn" data-val="low">LOW</button>
+            <button class="supply-btn" data-val="out">OUT</button>
+          </div>
+        </div>
+
+        <!-- Blankets -->
+        <div class="supply-card" data-resource="blankets">
+          <span style="font-size: 1.3rem;">🛏️</span>
+          <p style="font-weight: 700; font-size: 0.88rem; margin: 0.2rem 0;">Dry Blankets</p>
+          <div class="supply-btn-group">
+            <button class="supply-btn active-ok" data-val="ok">OK</button>
+            <button class="supply-btn" data-val="low">LOW</button>
+            <button class="supply-btn" data-val="out">OUT</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="../js/services/api.js"></script>
+  <script src="../js/services/auth.service.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!AuthService.isAuthenticated()) {
+        window.location.href = 'signin.html';
+        return;
+      }
+
+      const currentUser = AuthService.getCurrentUser();
+      let role = currentUser?.role;
+
+      // Check role
+      try {
+        const prof = await ApiService.get('/profile');
+        if (prof.success && prof.user) {
+          role = prof.user.role || 'citizen';
+        }
+      } catch (e) {}
+
+      if (!['admin', 'shelter_manager'].includes(role)) {
+        alert('Access restricted to Shelter Managers and Emergency Administrators.');
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      function showToast(message) {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `<span>ℹ️</span> <span>${message}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
+
+      let activeShelter = null;
+      let allShelters = [];
+
+      async function loadShelters() {
+        try {
+          const res = await ApiService.get('/shelters');
+          if (res.success && res.shelters) {
+            allShelters = res.shelters;
+            const select = document.getElementById('shelter-select');
+            select.innerHTML = allShelters.map(s => `
+              <option value="${s._id}">${s.name} (${s.currentOccupancy}/${s.capacity})</option>
+            `).join('');
+
+            activeShelter = allShelters[0];
+            updateShelterUi();
+          }
+        } catch (e) {
+          showToast('Failed to load shelters: ' + e.message);
+        }
+      }
+
+      document.getElementById('shelter-select').addEventListener('change', (e) => {
+        activeShelter = allShelters.find(s => String(s._id) === String(e.target.value));
+        updateShelterUi();
+      });
+
+      function updateShelterUi() {
+        if (!activeShelter) return;
+        const occ = activeShelter.currentOccupancy ?? 0;
+        const cap = activeShelter.capacity ?? 100;
+        const pct = Math.min(100, Math.round((occ / cap) * 100));
+
+        document.getElementById('display-occupancy').textContent = occ;
+        document.getElementById('display-capacity').textContent = `/ ${cap}`;
+        document.getElementById('occupancy-pct-text').textContent = `${pct}% space occupied`;
+
+        const prog = document.getElementById('occupancy-progress');
+        prog.style.width = `${pct}%`;
+
+        const badge = document.getElementById('shelter-status-badge');
+        if (pct >= 100) {
+          badge.textContent = 'FULL';
+          badge.className = 'badge badge-critical';
+          prog.style.background = '#DC2626';
+        } else if (pct >= 85) {
+          badge.textContent = 'NEAR FULL';
+          badge.className = 'badge badge-high';
+          prog.style.background = '#F59E0B';
+        } else {
+          badge.textContent = 'OPEN';
+          badge.className = 'badge badge-live';
+          prog.style.background = '#10B981';
+        }
+
+        // Update supply button states
+        const resObj = activeShelter.resources || { food: 'ok', water: 'ok', medicine: 'ok', blankets: 'ok' };
+        ['food', 'water', 'medicine', 'blankets'].forEach(r => {
+          const currentVal = resObj[r] || 'ok';
+          const card = document.querySelector(`.supply-card[data-resource="${r}"]`);
+          if (card) {
+            card.querySelectorAll('.supply-btn').forEach(btn => {
+              btn.className = 'supply-btn';
+              if (btn.dataset.val === currentVal) {
+                btn.classList.add(`active-${currentVal}`);
+              }
+            });
+          }
+        });
+      }
+
+      async function adjustOccupancy(delta) {
+        if (!activeShelter) return;
+        try {
+          const res = await ApiService.put(`/shelters/${activeShelter._id}/occupancy`, { delta });
+          if (res.success && res.shelter) {
+            activeShelter.currentOccupancy = res.shelter.currentOccupancy;
+            activeShelter.status = res.shelter.status;
+            updateShelterUi();
+            showToast(res.message);
+          }
+        } catch (err) {
+          showToast('Failed to update occupancy: ' + err.message);
+        }
+      }
+
+      document.getElementById('btn-add-1').addEventListener('click', () => adjustOccupancy(1));
+      document.getElementById('btn-sub-1').addEventListener('click', () => adjustOccupancy(-1));
+      document.getElementById('btn-add-5').addEventListener('click', () => adjustOccupancy(5));
+      document.getElementById('btn-sub-5').addEventListener('click', () => adjustOccupancy(-5));
+
+      // Supplies update
+      document.querySelectorAll('.supply-card').forEach(card => {
+        const resourceType = card.dataset.resource;
+        card.querySelectorAll('.supply-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const newVal = btn.dataset.val;
+            try {
+              const res = await ApiService.put(`/shelters/${activeShelter._id}/resources`, {
+                [resourceType]: newVal
+              });
+              if (res.success) {
+                activeShelter.resources = res.resources;
+                updateShelterUi();
+                showToast(`Updated ${resourceType} to ${newVal.toUpperCase()}`);
+              }
+            } catch (err) {
+              showToast('Failed to update supply: ' + err.message);
+            }
+          });
+        });
+      });
+
+      loadShelters();
+    });
+  </script>
+</body>
+</html>

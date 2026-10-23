@@ -98,7 +98,57 @@ router.get('/', async (req, res) => {
     const soilScore = Math.min(18, (soilMoisturePct / 100) * 18);
 
     let score = Math.round(regionalBaseIndex + rain24hScore + rainInstantScore + soilScore);
-    score = Math.min(98, Math.max(12, score));
+
+    // 5. Crowd Ground Truth Signal
+    // If there are >= 3 verified water_level reports within 3 km in the last 3 hours, add a bump (+5 to +15)
+    let crowdSignal = { points: 0, reportCount: 0, reason: 'No immediate verified crowd flood reports nearby' };
+    try {
+      const { inMemoryStore, isDbConnected } = require('../services/store.service');
+      const FloodReport = require('../models/FloodReport');
+      const { filterWithinRadius } = require('../services/geo.service');
+
+      let reports = [];
+      if (isDbConnected()) {
+        try {
+          reports = await FloodReport.find({
+            type: 'water_level',
+            status: 'verified',
+            createdAt: { $gte: new Date(Date.now() - 3 * 60 * 60 * 1000) }
+          }).lean();
+        } catch (e) {
+          reports = inMemoryStore.floodReports;
+        }
+      } else {
+        reports = inMemoryStore.floodReports;
+      }
+
+      const threeHoursAgo = Date.now() - (3 * 60 * 60 * 1000);
+      const activeRecent = reports.filter(r =>
+        r.type === 'water_level' &&
+        r.status === 'verified' &&
+        new Date(r.createdAt).getTime() >= threeHoursAgo
+      );
+
+      const nearbyReports = filterWithinRadius(activeRecent, lat, lng, 3.0, r => r.location || { lat: r.lat, lng: r.lng });
+
+      if (nearbyReports.length >= 3) {
+        const severityMap = { ankle: 1, knee: 2, waist: 3, chest: 4, above_head: 5 };
+        const totalSev = nearbyReports.reduce((sum, r) => sum + (severityMap[r.waterLevel] || 2), 0);
+        const avgSev = totalSev / nearbyReports.length;
+        const bump = Math.min(15, Math.max(5, Math.round(5 + avgSev * 2)));
+
+        crowdSignal = {
+          points: bump,
+          reportCount: nearbyReports.length,
+          reason: `${nearbyReports.length} verified crowd water level reports confirmed within 3 km (+${bump} pts)`
+        };
+        score += bump;
+      }
+    } catch (crowdErr) {
+      console.warn('[FLOOD RISK] Could not compute crowdSignal:', crowdErr.message);
+    }
+
+    score = Math.min(99, Math.max(12, score));
 
     let category = 'Low';
     if (score >= 78) category = 'Critical';
@@ -115,7 +165,6 @@ router.get('/', async (req, res) => {
       else if (next3hRain > 0.5) trend = `→ Light showers in forecast (${next3hRain.toFixed(1)} mm next 3h)`;
       else trend = '↘ Dry weather window predicted';
     }
-
 
     const lastFetched = new Date().toISOString();
 
@@ -142,6 +191,10 @@ router.get('/', async (req, res) => {
           pct: Math.min(90, Math.round(score * 0.9)) 
         }
       },
+      breakdown: {
+        crowdSignal
+      },
+      crowdSignal,
       source: 'Open-Meteo live data & Hydrologic Risk Model',
       liveData: true
     };

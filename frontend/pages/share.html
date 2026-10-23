@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Safety Location — FloodSAHAAY</title>
+  <link rel="icon" type="image/png" href="../assets/limitlez-favicon.png">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    body {
+      background: var(--bg-surface);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .share-container {
+      max-width: 720px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+      width: 100%;
+      flex: 1;
+    }
+    .status-card {
+      background: #FFFFFF;
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+    .status-badge-lg {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .status-safe { background: #E6F4EA; color: #137333; }
+    .status-need_help { background: #FCE8E6; color: #C5221F; }
+    .status-evacuating { background: #FEF7E0; color: #B06000; }
+    #share-map {
+      height: 360px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="header-nav" style="justify-content: space-between;">
+    <div class="logo">
+      <div class="logo-icon">~</div>
+      <span>FloodSAHAAY</span>
+    </div>
+    <span class="badge badge-live"><span class="badge-dot"></span> Read-Only Live Tracking</span>
+  </header>
+
+  <main class="share-container">
+    <div id="loading-state" class="card" style="text-align: center; padding: 3rem 1.5rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 1rem;">📍</div>
+      <h2 class="heading-md">Fetching Live Location...</h2>
+      <p class="subtext">Connecting to emergency safety beacon...</p>
+    </div>
+
+    <div id="error-state" class="card" style="text-align: center; padding: 3rem 1.5rem; display: none;">
+      <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚠️</div>
+      <h2 class="heading-md" id="error-title">Link Expired or Invalid</h2>
+      <p class="subtext" id="error-msg">This emergency location link has expired or is no longer accessible.</p>
+      <a href="../index.html" class="btn btn-primary" style="margin-top: 1.5rem; display: inline-block;">Go to Home</a>
+    </div>
+
+    <div id="content-state" style="display: none;">
+      <div class="status-card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <p class="label-caps" style="margin-bottom: 0.25rem;">SAFETY STATUS</p>
+            <h1 class="heading-lg" id="user-name" style="margin: 0;">Citizen</h1>
+          </div>
+          <div id="status-pill" class="status-badge-lg status-safe">
+            <span id="status-icon">✓</span>
+            <span id="status-text">SAFE</span>
+          </div>
+        </div>
+
+        <div id="user-message" style="background: var(--bg-surface); padding: 0.85rem 1rem; border-radius: var(--radius-sm); border-left: 4px solid var(--primary); font-size: 0.95rem; margin-bottom: 1.25rem;">
+          "Status message"
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          <div>
+            <span class="subtext">Last Updated</span>
+            <p id="updated-time" style="font-weight: 600; color: var(--text-primary); margin: 0.2rem 0 0;">Just now</p>
+          </div>
+          <div>
+            <span class="subtext">Battery Level</span>
+            <p id="battery-level" style="font-weight: 600; color: var(--text-primary); margin: 0.2rem 0 0;">--%</p>
+          </div>
+          <div>
+            <span class="subtext">GPS Coordinates</span>
+            <p id="coords-text" style="font-weight: 600; color: var(--text-primary); margin: 0.2rem 0 0;">--</p>
+          </div>
+        </div>
+
+        <div id="share-map"></div>
+      </div>
+
+      <!-- Quick Action Helplines -->
+      <div class="card" style="margin-bottom: 2rem;">
+        <h3 class="heading-md" style="margin-bottom: 0.75rem;">Immediate Emergency Assistance</h3>
+        <p class="subtext" style="margin-bottom: 1rem;">If this person requires immediate rescue or medical aid, contact official disaster hotlines:</p>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <a href="tel:112" class="btn btn-primary btn-sm" style="background: var(--accent-red); border-color: var(--accent-red);">📞 Dial 112 (National Emergency)</a>
+          <a href="tel:1078" class="btn btn-secondary btn-sm">📞 Dial 1078 (NDMA Disaster Helpline)</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const API_BASE = isLocal ? 'http://localhost:5000/api' : '/api';
+
+    async function loadShareData() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+
+      if (!token) {
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('error-state').style.display = 'block';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/share/${token}`);
+        const data = await res.json();
+
+        document.getElementById('loading-state').style.display = 'none';
+
+        if (!res.ok || !data.success) {
+          document.getElementById('error-title').textContent = res.status === 410 ? 'Share Link Expired' : 'Link Not Found';
+          document.getElementById('error-msg').textContent = data.message || 'Unable to retrieve location data.';
+          document.getElementById('error-state').style.display = 'block';
+          return;
+        }
+
+        const s = data.share;
+        document.getElementById('content-state').style.display = 'block';
+        document.getElementById('user-name').textContent = s.userName || 'Citizen';
+        document.getElementById('user-message').textContent = s.message ? `"${s.message}"` : 'No message attached';
+        document.getElementById('updated-time').textContent = new Date(s.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('battery-level').textContent = s.batteryLevel ? `🔋 ${s.batteryLevel}%` : 'Unavailable';
+        document.getElementById('coords-text').textContent = `${s.location.lat.toFixed(4)}°N, ${s.location.lng.toFixed(4)}°E`;
+
+        const pill = document.getElementById('status-pill');
+        const icon = document.getElementById('status-icon');
+        const text = document.getElementById('status-text');
+
+        if (s.status === 'need_help') {
+          pill.className = 'status-badge-lg status-need_help';
+          icon.textContent = '🚨';
+          text.textContent = 'NEEDS HELP';
+        } else if (s.status === 'evacuating') {
+          pill.className = 'status-badge-lg status-evacuating';
+          icon.textContent = '🏃';
+          text.textContent = 'EVACUATING';
+        } else {
+          pill.className = 'status-badge-lg status-safe';
+          icon.textContent = '✓';
+          text.textContent = 'SAFE';
+        }
+
+        // Initialize Map
+        const map = L.map('share-map').setView([s.location.lat, s.location.lng], 14);
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+          attribution: 'Tiles &copy; Esri &mdash; OpenStreetMap'
+        }).addTo(map);
+
+        const marker = L.marker([s.location.lat, s.location.lng]).addTo(map);
+        marker.bindPopup(`<strong>${s.userName}</strong><br>Status: ${s.status.toUpperCase()}`).openPopup();
+
+        setTimeout(() => map.invalidateSize(), 200);
+
+      } catch (err) {
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('error-msg').textContent = 'Could not reach server: ' + err.message;
+        document.getElementById('error-state').style.display = 'block';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadShareData);
+  </script>
+</body>
+</html>

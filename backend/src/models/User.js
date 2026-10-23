@@ -51,6 +51,25 @@ const UserSchema = new mongoose.Schema({
   isEmailVerified: {
     type: Boolean,
     default: false
+  },
+  role: {
+    type: String,
+    enum: ['citizen', 'volunteer', 'shelter_manager', 'responder', 'admin'],
+    default: 'citizen',
+    index: true
+  },
+  district: {
+    type: String,
+    default: ''
+  },
+  verifiedResponder: {
+    type: Boolean,
+    default: false
+  },
+  lastKnownLocation: {
+    lat: Number,
+    lng: Number,
+    updatedAt: Date
   }
 }, { timestamps: true });
 
