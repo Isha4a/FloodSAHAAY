@@ -13,6 +13,124 @@
   
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    /* Donate button + pip styles for landing page (dashboard.css not loaded here) */
+    .btn-donate {
+      background: linear-gradient(135deg, #D46B2A 0%, #C8441A 100%);
+      color: #fff !important; border: none; font-weight: 700;
+      position: relative; overflow: hidden; flex-shrink: 0;
+      animation: donate-glow-lp 3s ease-in-out infinite;
+    }
+    .btn-donate::before {
+      content: ''; position: absolute; top: -50%; left: -60%; width: 40%; height: 200%;
+      background: rgba(255,255,255,0.18); transform: skewX(-20deg);
+      animation: donate-shimmer-lp 3s ease-in-out infinite; pointer-events: none;
+    }
+    @keyframes donate-glow-lp {
+      0%,100% { box-shadow: 0 0 0 0 rgba(212,107,42,.5), 0 2px 8px rgba(212,107,42,.35); }
+      50%      { box-shadow: 0 0 0 5px rgba(212,107,42,0), 0 2px 8px rgba(212,107,42,.35); }
+    }
+    @keyframes donate-shimmer-lp { 0%{left:-60%} 60%{left:130%} 100%{left:130%} }
+    .btn-donate:hover { background: linear-gradient(135deg,#C8621F,#B83A10); transform: translateY(-1px); }
+
+    /* Landing page floating pip */
+    #landing-donate-pip {
+      position: fixed; bottom: 28px; right: 20px; z-index: 9998;
+      display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer;
+    }
+    .donate-pip-btn-lp {
+      width: 58px; height: 58px; border-radius: 50%;
+      background: linear-gradient(135deg,#D46B2A,#B83A10); color: #fff; border: none;
+      display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+      cursor: pointer; position: relative;
+      box-shadow: 0 4px 18px rgba(212,107,42,.55);
+      animation: lp-pip-pulse 2.2s cubic-bezier(.455,.03,.515,.955) infinite;
+    }
+    .donate-pip-btn-lp::after {
+      content: ''; position: absolute; top: 4px; right: 4px;
+      width: 10px; height: 10px; background: #fff; border-radius: 50%;
+      border: 2px solid #D46B2A; animation: lp-dot 1.4s ease infinite;
+    }
+    @keyframes lp-pip-pulse {
+      0%   { box-shadow: 0 4px 18px rgba(212,107,42,.55), 0 0 0 0   rgba(212,107,42,.4); }
+      70%  { box-shadow: 0 4px 18px rgba(212,107,42,.55), 0 0 0 18px rgba(212,107,42,0); }
+      100% { box-shadow: 0 4px 18px rgba(212,107,42,.55), 0 0 0 0   rgba(212,107,42,.4); }
+    }
+    @keyframes lp-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+    .donate-pip-label-lp {
+      background: #1A1A1A; color: #fff; font-size: 0.68rem; font-weight: 700;
+      letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px;
+      border-radius: 999px; white-space: nowrap;
+    }
+
+    /* Donation modal shared styles (inline) */
+    .lp-modal-backdrop {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center;
+      z-index: 100000; opacity: 0; pointer-events: none; transition: opacity .25s ease;
+    }
+    .lp-modal-backdrop.active { opacity: 1; pointer-events: auto; }
+    .lp-modal-content {
+      background: #fff; border-radius: 16px; width: 90%; max-width: 620px;
+      max-height: 88vh; overflow: hidden; display: flex; flex-direction: column;
+      box-shadow: 0 8px 24px rgba(0,0,0,.12); transform: translateY(20px); transition: transform .25s ease;
+    }
+    .lp-modal-backdrop.active .lp-modal-content { transform: translateY(0); }
+    .lp-modal-header {
+      background: linear-gradient(135deg,#D46B2A,#9e3b0e); color: #fff;
+      padding: 1.5rem 1.75rem 1.25rem; position: relative; flex-shrink: 0;
+    }
+    .lp-modal-header h3 { color: #fff; font-size: 1.2rem; margin: 0 0 .25rem; }
+    .lp-modal-header p  { font-size: .82rem; opacity: .88; margin: 0; }
+    .lp-modal-close {
+      position: absolute; top: 1rem; right: 1.25rem; font-size: 1.6rem;
+      color: rgba(255,255,255,.8); cursor: pointer; background: none; border: none;
+    }
+    .lp-modal-body { padding: 1.25rem 1.75rem; overflow-y: auto; flex: 1; }
+    .lp-modal-footer {
+      padding: .85rem 1.75rem; border-top: 1px solid #E0DDD8; background: #F7F5F2;
+      font-size: .75rem; color: #888; display: flex; align-items: center; gap: .6rem; flex-shrink: 0;
+    }
+    .lp-portal-card {
+      border: 1px solid #E0DDD8; border-radius: 10px; padding: 1.1rem 1.25rem; margin-bottom: 1rem; background: #fff;
+    }
+    .lp-upi-box {
+      display: flex; align-items: center; gap: .5rem; background: #F7F5F2;
+      border: 1px solid #E0DDD8; border-radius: 6px; padding: .5rem .75rem; margin-bottom: .75rem;
+    }
+    .lp-upi-id { font-family: monospace; font-size: .9rem; font-weight: 700; }
+    .lp-copy-btn {
+      font-size: .78rem; padding: .3rem .7rem; background: #1A1A1A; color: #fff;
+      border-radius: 6px; border: none; font-weight: 600; cursor: pointer; flex-shrink: 0; margin-left: auto;
+    }
+    .lp-copy-btn.copied { background: #3D7A58; }
+    .lp-donate-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: .75rem 1.25rem; background: #1A1A1A; color: #fff; border-radius: 6px;
+      font-weight: 600; font-size: .9rem; text-decoration: none; width: 100%; margin-bottom: .75rem;
+    }
+    .lp-trust-row { display: flex; flex-wrap: wrap; gap: .4rem .9rem; }
+    .lp-trust-item { font-size: .72rem; color: #3D7A58; font-weight: 600; }
+    .lp-tier-badge {
+      display: inline-block; font-size: .66rem; font-weight: 700; letter-spacing: .07em;
+      text-transform: uppercase; padding: 2px 7px; border-radius: 999px; margin-bottom: .25rem;
+    }
+    .lp-tier-national { background: rgba(212,107,42,.14); color: #A8490F; }
+    .lp-tier-state    { background: rgba(74,155,110,.14); color: #2D6B4A; }
+    .lp-skeleton {
+      height: 110px; border-radius: 10px;
+      background: linear-gradient(90deg,#f0ede8 25%,#e8e4de 50%,#f0ede8 75%);
+      background-size: 200% 100%; animation: lp-skel 1.4s ease infinite; margin-bottom: .8rem;
+    }
+    @keyframes lp-skel { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    @media (max-width: 576px) {
+      .lp-modal-content { width: 100%; max-width: 100%; border-radius: 20px 20px 0 0; max-height: 85vh; }
+      .lp-modal-backdrop { align-items: flex-end; }
+      #landing-donate-pip { right: 14px; bottom: 20px; }
+    }
+  </style>
+
 </head>
 <body>
   <div class="water-background" aria-hidden="true">
@@ -29,10 +147,12 @@
     </div>
 
     <div class="nav-right">
+      <button id="landing-donate-btn" class="btn btn-donate btn-sm" title="Donate to government flood relief funds">🫶 Donate Relief</button>
       <a href="pages/signin.html" class="btn btn-secondary btn-sm" style="border: none;">Sign in</a>
       <a href="pages/register.html" class="btn btn-primary btn-sm">Get started</a>
     </div>
   </header>
+
 
   <!-- Hero Split Layout -->
   <section class="landing-hero">
@@ -227,6 +347,149 @@
     });
   </script>
 
+  <!-- Landing Page Floating Pip -->
+  <div id="landing-donate-pip" role="button" aria-label="Donate to Flood Relief" tabindex="0">
+    <button class="donate-pip-btn-lp" aria-hidden="true">🫶</button>
+    <span class="donate-pip-label-lp">Donate</span>
+  </div>
+
+  <!-- Landing Page Donation Modal -->
+  <div id="lp-donation-modal" class="lp-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="lp-donation-modal-title">
+    <div class="lp-modal-content">
+      <div class="lp-modal-header">
+        <h3 id="lp-donation-modal-title">🫶 Flood Relief — Donate Safely</h3>
+        <p>Direct official Indian government relief funds. Your donations reach verified authorities directly.</p>
+        <button id="btn-close-lp-modal" class="lp-modal-close" aria-label="Close donation modal">&times;</button>
+      </div>
+
+      <div class="lp-modal-body" id="lp-donation-portal-list">
+        <div class="lp-skeleton"></div>
+        <div class="lp-skeleton"></div>
+        <div class="lp-skeleton" style="height:80px;"></div>
+      </div>
+
+      <div class="lp-modal-footer">
+        <span style="font-size:1.1rem;">🔒</span>
+        <span>FloodSAHAAY <strong>never collects payment details</strong>. All links direct to official .gov.in portals.</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Landing page donation modal logic
+    (function initLandingDonation() {
+      const modal = document.getElementById('lp-donation-modal');
+      const closeBtn = document.getElementById('btn-close-lp-modal');
+      const headerBtn = document.getElementById('landing-donate-btn');
+      const pip = document.getElementById('landing-donate-pip');
+      const portalList = document.getElementById('lp-donation-portal-list');
+      let cached = null;
+
+      function openModal() {
+        if (!modal) return;
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        fetchPortals();
+      }
+
+      function closeModal() {
+        if (!modal) return;
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      if (headerBtn) headerBtn.addEventListener('click', openModal);
+      if (pip) {
+        pip.addEventListener('click', openModal);
+        pip.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(); }
+        });
+      }
+      if (closeBtn) closeBtn.addEventListener('click', closeModal);
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) closeModal();
+        });
+      }
+
+      async function fetchPortals() {
+        if (cached) {
+          render(cached);
+          return;
+        }
+        try {
+          const res = await fetch('/api/donations/portals').then(r => r.json());
+          if (res.success && res.portals) {
+            cached = res;
+            render(res);
+          } else {
+            throw new Error('Failed to load portals');
+          }
+        } catch (err) {
+          renderFallback();
+        }
+      }
+
+      function render(data) {
+        if (!portalList) return;
+        const html = data.portals.map(p => `
+          <div class="lp-portal-card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem;">
+              <div>
+                <span class="lp-tier-badge lp-tier-${p.tier || 'national'}">${(p.tier || 'NATIONAL').toUpperCase()}</span>
+                <h4 style="font-size:1rem; margin:0.2rem 0;">${p.name}</h4>
+                <p style="font-size:0.75rem; color:#888; margin:0;">${p.authority}</p>
+              </div>
+              <span style="font-size:1.3rem;">${p.tier === 'state' ? '🏛️' : '🇮🇳'}</span>
+            </div>
+            <p style="font-size:0.82rem; color:#555; margin-bottom:0.75rem; line-height:1.4;">${p.description}</p>
+            ${p.upiId ? `
+              <div class="lp-upi-box">
+                <span class="lp-upi-id">${p.upiId}</span>
+                <button class="lp-copy-btn" data-upi="${p.upiId}">📋 Copy UPI</button>
+              </div>
+            ` : ''}
+            <a href="${p.officialUrl}" target="_blank" rel="noopener noreferrer" class="lp-donate-btn">
+              🔗 Donate on Official Portal
+            </a>
+            <div class="lp-trust-row">
+              <span class="lp-trust-item">✓ Government Verified</span>
+              <span class="lp-trust-item">✓ 80G Tax Exempt</span>
+              <span class="lp-trust-item">✓ PFMS Tracked</span>
+            </div>
+          </div>
+        `).join('');
+
+        portalList.innerHTML = html;
+
+        portalList.querySelectorAll('.lp-copy-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const upi = btn.dataset.upi;
+            navigator.clipboard.writeText(upi).then(() => {
+              btn.textContent = '✅ Copied!';
+              btn.classList.add('copied');
+              setTimeout(() => {
+                btn.textContent = '📋 Copy UPI';
+                btn.classList.remove('copied');
+              }, 2000);
+            });
+          });
+        });
+      }
+
+      function renderFallback() {
+        if (!portalList) return;
+        portalList.innerHTML = `
+          <div style="text-align:center; padding:1.5rem 0;">
+            <p style="font-weight:600; margin-bottom:0.5rem;">Direct Official Portals</p>
+            <p style="font-size:0.85rem; color:#666; margin-bottom:1rem;">Please access government portals directly:</p>
+            <a href="https://pmcares.gov.in/en/web/page/donate" target="_blank" class="lp-donate-btn" style="margin-bottom:0.5rem;">PM CARES Fund</a>
+            <a href="https://www.pmnrf.gov.in/en/online-donation" target="_blank" class="lp-donate-btn">PM National Relief Fund</a>
+          </div>
+        `;
+      }
+    })();
+  </script>
+
 </body>
 </html>
-

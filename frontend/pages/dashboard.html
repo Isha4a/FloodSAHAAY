@@ -42,9 +42,11 @@
 
     <div class="nav-right">
       <span id="current-location-label" title="Click to change location" style="cursor: pointer; padding: 0.3rem 0.6rem; background: rgba(0,0,0,0.04); border-radius: var(--radius-sm); font-weight: 600;">📍 Lucknow</span>
+      <button id="btn-open-donation" class="btn btn-donate btn-sm" title="Donate to government flood relief funds">🫶 Donate Relief</button>
       <a href="profile.html">Profile</a>
       <span class="badge badge-live"><span class="badge-dot"></span> Live</span>
     </div>
+
   </header>
 
   <!-- TAB CONTENT PANELS -->
@@ -151,6 +153,9 @@
           <!-- Quick Access -->
           <div class="card" style="margin-bottom: 1.5rem;">
             <p class="label-caps" style="margin-bottom: 0.75rem;">QUICK ACCESS</p>
+            <div id="quick-donate-row" class="quick-link-row quick-link-row-donate" style="cursor:pointer;">
+              <span>🫶 Donate to Flood Relief</span> <span>›</span>
+            </div>
             <div class="quick-link-row emergency-sos-row nav-tab" data-tab="emergency" style="background: var(--accent-red-light); color: var(--accent-red);">
               <span>🚨 Emergency SOS</span> <span>›</span>
             </div>
@@ -158,6 +163,7 @@
             <div class="quick-link-row nav-tab" data-tab="shelters"><span>Evacuation shelters</span> <span>›</span></div>
             <div class="quick-link-row nav-tab" data-tab="safety"><span>Safety Circle</span> <span>›</span></div>
           </div>
+
 
           <!-- Safety Circle Quick View -->
           <div class="card">
@@ -705,6 +711,46 @@
       <button id="btn-open-add-contact-direct" class="btn btn-secondary btn-full">
         + Add Person / Contact Directly
       </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       FLOATING DONATION PIP / BADGE (always visible)
+       ═══════════════════════════════════════════════════ -->
+  <div id="donate-floating-pip" role="button" aria-label="Donate to Flood Relief" tabindex="0">
+    <button class="donate-pip-btn" aria-hidden="true">🫶</button>
+    <span class="donate-pip-label">Donate</span>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       5. DONATION MODAL
+       ═══════════════════════════════════════════════════ -->
+  <div id="donation-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="donation-modal-title">
+    <div class="modal-content">
+
+      <!-- Modal Header (orange gradient) -->
+      <div class="donation-modal-header">
+        <h3 id="donation-modal-title">🫶 Flood Relief — Donate Safely</h3>
+        <p>All portals below are official Indian government relief funds. Your payment goes directly to verified authorities.</p>
+        <button id="btn-close-donation-modal" aria-label="Close donation modal">&times;</button>
+      </div>
+
+      <!-- Portal List (loaded dynamically by JS) -->
+      <div class="donation-modal-body" id="donation-portal-list">
+        <!-- Loading skeleton shown before JS renders portals -->
+        <div class="donate-loading">
+          <div class="donate-skeleton"></div>
+          <div class="donate-skeleton"></div>
+          <div class="donate-skeleton" style="height:80px;"></div>
+        </div>
+      </div>
+
+      <!-- Footer Disclaimer -->
+      <div class="donation-modal-footer">
+        <span class="lock-icon">🔒</span>
+        <span>FloodSAHAAY <strong>never handles payment data</strong>. Clicking "Donate Now" opens the official government portal in a new tab. All UPI IDs listed are publicly verified by the respective ministry.</span>
+      </div>
+
     </div>
   </div>
 

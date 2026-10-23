@@ -1104,7 +1104,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const locText = document.getElementById('sos-modal-location');
       if (locText) locText.textContent = selectedLoc.name;
       if (sosModal) sosModal.classList.add('active');
-    }, 1200);
+    }, 800);
   }
 
   function cancelSOS() {
@@ -1162,11 +1162,241 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // ─── 11. Donation Modal ─────────────────────────────────────────────────────
+  (function initDonationModal() {
+    const modal        = document.getElementById('donation-modal');
+    const portalList   = document.getElementById('donation-portal-list');
+    const closeBtn     = document.getElementById('btn-close-donation-modal');
+    const openBtn      = document.getElementById('btn-open-donation');
+    const quickRow     = document.getElementById('quick-donate-row');
+    const floatingPip  = document.getElementById('donate-floating-pip');
+
+    // Cache fetched portals for the session so repeat modal opens are instant
+    let cachedPortals = null;
+
+    const TIER_ICONS   = { national: '🇮🇳', state: '🏛️', ngo: '🤝' };
+    const TRUST_LABELS = [
+      '✓ Government Verified',
+      '✓ 80G Tax Exempt',
+      '✓ PFMS Tracked',
+      '✓ Official .gov.in Link'
+    ];
+    const AMOUNTS = ['₹100', '₹500', '₹1,000', '₹5,000'];
+
+    // ── Open / Close ──────────────────────────────────────────────────────────
+    function openModal() {
+      if (!modal) return;
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      fetchAndRenderPortals();
+    }
+
+    function closeModal() {
+      if (!modal) return;
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // Close on backdrop click (outside modal-content)
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+    }
+    if (closeBtn)    closeBtn.addEventListener('click', closeModal);
+    if (openBtn)     openBtn.addEventListener('click', openModal);
+    if (quickRow)    quickRow.addEventListener('click', openModal);
+
+    // Floating pip — click and keyboard (Enter/Space)
+    if (floatingPip) {
+      floatingPip.addEventListener('click', openModal);
+      floatingPip.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(); }
+      });
+    }
+
+    // ── Fetch portals from API (with session cache) ───────────────────────────
+    async function fetchAndRenderPortals() {
+      if (!portalList) return;
+
+      // If already fetched, render instantly from cache
+      if (cachedPortals) {
+        renderPortals(cachedPortals);
+        return;
+      }
+
+      // Show skeleton while loading
+      portalList.innerHTML = `
+        <div class="donate-loading">
+          <div class="donate-skeleton"></div>
+          <div class="donate-skeleton"></div>
+          <div class="donate-skeleton" style="height:80px;"></div>
+        </div>`;
+
+      try {
+        const res = await ApiService.get('/donations/portals');
+        if (res.success && Array.isArray(res.portals) && res.portals.length > 0) {
+          cachedPortals = { portals: res.portals, lastUpdated: res.lastUpdated };
+          renderPortals(cachedPortals);
+        } else {
+          throw new Error('Empty portal list returned');
+        }
+      } catch (err) {
+        console.warn('[DONATION] Could not fetch portals:', err.message);
+        renderError();
+      }
+    }
+
+    // ── Build portal cards HTML ───────────────────────────────────────────────
+    function renderPortals({ portals, lastUpdated }) {
+      if (!portalList) return;
+
+      const updatedStr = lastUpdated
+        ? new Date(lastUpdated).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+        : '';
+
+      const headerHtml = `
+        <p class="label-caps" style="margin-bottom:1rem;color:var(--text-muted);">
+          VERIFIED GOVERNMENT PORTALS
+          ${updatedStr ? `<span style="float:right;text-transform:none;letter-spacing:0;">Last updated ${updatedStr}</span>` : ''}
+        </p>`;
+
+      const cardsHtml = portals.map(p => buildPortalCard(p)).join('');
+
+      portalList.innerHTML = headerHtml + cardsHtml;
+
+      // Attach event handlers to all rendered copy & chip buttons
+      attachPortalHandlers();
+    }
+
+    function buildPortalCard(p) {
+      const tierIcon  = TIER_ICONS[p.tier] || '🏛️';
+      const upiBlock  = p.upiId ? `
+        <div class="donate-upi-box">
+          <span class="donate-upi-id">${p.upiId}</span>
+          <span class="donate-upi-label">UPI ID</span>
+          <button class="btn-copy-upi" data-upi="${p.upiId}" data-portal="${p.name}">📋 Copy</button>
+        </div>` : `
+        <div class="donate-upi-box" style="opacity:0.6;">
+          <span style="font-size:0.8rem;color:var(--text-muted);">Bank transfer available — see official portal</span>
+        </div>`;
+
+      const bankBlock = p.accountDetails && p.accountDetails.bankName ? `
+        <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.75rem;">
+          🏦 ${p.accountDetails.bankName} · A/C: ${p.accountDetails.accountNo || '—'} · IFSC: ${p.accountDetails.ifsc || '—'}
+        </p>` : '';
+
+      const chipsHtml = p.upiId ? `
+        <div class="donate-amounts-row">
+          ${AMOUNTS.map(amt => `<button class="donate-amount-chip" data-amount="${amt}" data-upi="${p.upiId}" data-portal="${p.name}">${amt}</button>`).join('')}
+        </div>` : '';
+
+      const trustHtml = `
+        <div class="donate-trust-row">
+          ${TRUST_LABELS.map(t => `<span class="donate-trust-item">${t}</span>`).join('')}
+        </div>`;
+
+      return `
+        <div class="donate-portal-card">
+          <div class="donate-portal-card-header">
+            <div class="donate-portal-icon tier-${p.tier}">${tierIcon}</div>
+            <div style="flex:1;min-width:0;">
+              <span class="donate-tier-badge ${p.tier}">${p.tier.toUpperCase()}</span>
+              <div class="donate-portal-name">${p.name}</div>
+              <div class="donate-portal-authority">${p.authority}</div>
+            </div>
+          </div>
+          <p class="donate-portal-desc">${p.description}</p>
+          ${upiBlock}
+          ${bankBlock}
+          ${chipsHtml}
+          <div class="donate-actions-row">
+            <a href="${p.officialUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+              🔗 Donate Now (Official Portal)
+            </a>
+          </div>
+          ${trustHtml}
+        </div>`;
+    }
+
+    function renderError() {
+      if (!portalList) return;
+      portalList.innerHTML = `
+        <div class="donate-error-box">
+          <div style="font-size:2rem;margin-bottom:0.75rem;">⚠️</div>
+          <p style="font-weight:600;margin-bottom:0.5rem;">Could not load portals</p>
+          <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:1.25rem;">
+            Please visit the official government portals directly:
+          </p>
+          <a href="https://pmcares.gov.in/en/web/page/donate" target="_blank" rel="noopener noreferrer">
+            → PM CARES Fund (pmcares.gov.in)
+          </a><br><br>
+          <a href="https://www.pmnrf.gov.in/en/online-donation" target="_blank" rel="noopener noreferrer">
+            → PM National Relief Fund (pmnrf.gov.in)
+          </a>
+        </div>`;
+    }
+
+    // ── Event delegation for dynamically rendered buttons ─────────────────────
+    function attachPortalHandlers() {
+      if (!portalList) return;
+
+      // Copy UPI ID
+      portalList.querySelectorAll('.btn-copy-upi').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const upiId = btn.dataset.upi;
+          const portalName = btn.dataset.portal;
+          navigator.clipboard.writeText(upiId).then(() => {
+            btn.textContent = '✅ Copied!';
+            btn.classList.add('copied');
+            showToast(`📋 UPI ID "${upiId}" copied — paste into PhonePe, GPay, or BHIM`);
+            setTimeout(() => {
+              btn.textContent = '📋 Copy';
+              btn.classList.remove('copied');
+            }, 2500);
+          }).catch(() => {
+            showToast(`UPI ID: ${upiId} (${portalName})`);
+          });
+        });
+      });
+
+      // Amount quick-select chips — copy UPI deep-link intent
+      portalList.querySelectorAll('.donate-amount-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const rawAmt = chip.dataset.amount.replace(/[₹,]/g, '');
+          const upiId  = chip.dataset.upi;
+          const portal = chip.dataset.portal;
+
+          // Deselect siblings, select this chip
+          chip.closest('.donate-amounts-row').querySelectorAll('.donate-amount-chip')
+            .forEach(c => c.classList.remove('selected'));
+          chip.classList.add('selected');
+
+          // UPI intent URL — opens directly in BHIM / GPay / PhonePe on mobile
+          const intentUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(portal)}&am=${rawAmt}&cu=INR&tn=${encodeURIComponent('Flood Relief Donation')}`;
+
+          // On mobile try to launch UPI app; on desktop copy the UPI ID + amount
+          if (/android|iphone|ipad/i.test(navigator.userAgent)) {
+            window.location.href = intentUrl;
+            showToast(`Opening UPI app for ₹${rawAmt} donation to ${portal}...`);
+          } else {
+            navigator.clipboard.writeText(upiId).then(() => {
+              showToast(`💡 Open GPay / BHIM, paste UPI ID "${upiId}" and enter ₹${rawAmt}`);
+            }).catch(() => {
+              showToast(`UPI: ${upiId} · Amount: ₹${rawAmt} · Fund: ${portal}`);
+            });
+          }
+        });
+      });
+    }
+  })();
+
   // Initial Boot Sequence
   initMaps();
   updateLocation(selectedLoc, true);
   loadAlertsData();
   loadContactsData();
+
 
   // Handle direct hash navigation e.g. dashboard.html#map
   const initialHash = window.location.hash ? window.location.hash.replace('#', '') : '';
