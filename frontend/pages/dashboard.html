@@ -1,1201 +1,2755 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FloodSAHAAY — Dashboard</title>
-  <link rel="icon" type="image/png" href="../assets/limitlez-favicon.png">
-  <link rel="stylesheet" href="../css/base.css">
-  <link rel="stylesheet" href="../css/components.css">
-  <link rel="stylesheet" href="../css/layout.css">
-  <link rel="stylesheet" href="../css/dashboard.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- Leaflet CSS & JS for Real Interactive Maps -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-</head>
-<body>
-  <!-- Toast Container -->
-  <div id="toast-container" class="toast-container"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FloodSAHAAY — Dashboard</title>
+    <link rel="icon" type="image/png" href="../assets/limitlez-favicon.png" />
+    <link rel="stylesheet" href="../css/base.css" />
+    <link rel="stylesheet" href="../css/components.css" />
+    <link rel="stylesheet" href="../css/layout.css" />
+    <link rel="stylesheet" href="../css/dashboard.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
 
-  <!-- Top Navigation -->
-  <header class="header-nav">
-    <div class="logo">
-      <div class="logo-icon">~</div>
-      <span>FloodSAHAAY</span>
-    </div>
+    <!-- Leaflet CSS & JS for Real Interactive Maps -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  </head>
+  <body>
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
 
-    <button id="hamburger-btn" class="nav-hamburger" aria-label="Open menu">
-      <span></span><span></span><span></span>
-    </button>
-
-    <nav class="nav-tabs" id="desktop-nav">
-      <a href="#overview" class="nav-tab active" data-tab="overview">Overview</a>
-      <a href="#map" class="nav-tab" data-tab="map">Map</a>
-      <a href="#alerts" class="nav-tab" data-tab="alerts">Alerts <span id="nav-alerts-badge" class="badge badge-critical" style="padding: 2px 6px; font-size: 0.7rem; display: none;"></span></a>
-      <a href="#emergency" class="nav-tab" data-tab="emergency">Emergency</a>
-      <a href="#safety" class="nav-tab" data-tab="safety">Safety</a>
-      <a href="#shelters" class="nav-tab" data-tab="shelters">Shelters</a>
-      <a href="#recovery" class="nav-tab" data-tab="recovery">Recovery & First Aid</a>
-      <a href="#helpline" class="nav-tab" data-tab="helpline">Helpline</a>
-    </nav>
-
-    <div class="nav-right">
-      <span id="current-location-label" title="Click to change location" style="cursor: pointer; padding: 0.3rem 0.6rem; background: rgba(0,0,0,0.04); border-radius: var(--radius-sm); font-weight: 600;">📍 Lucknow</span>
-      <button id="btn-open-donation" class="btn btn-donate btn-sm" title="Donate to government flood relief funds">🫶 Donate Relief</button>
-      <a href="profile.html">Profile</a>
-      <span class="badge badge-live"><span class="badge-dot"></span> Live</span>
-    </div>
-
-  </header>
-
-  <!-- TAB CONTENT PANELS -->
-  <main id="tab-container">
-    
-    <!-- 1. OVERVIEW TAB -->
-    <section id="tab-overview" class="tab-panel active">
-      <div class="dashboard-layout">
-        <div class="dashboard-main">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
-            <div>
-              <p class="label-caps">MONITORING</p>
-              <h1 class="heading-lg" id="overview-location-heading">Lucknow, Uttar Pradesh</h1>
-            </div>
-            <div style="text-align: right;">
-              <span class="subtext" id="overview-updated-time">Updated recently</span>
-              <span class="badge badge-live" style="margin-left: 0.5rem;"><span class="badge-dot"></span> Live</span>
-            </div>
-          </div>
-
-          <!-- Quick Safety Check-in Action Bar -->
-          <div class="checkin-action-bar">
-            <button class="btn btn-checkin-safe btn-quick-checkin" data-status="safe">
-              <span>✓</span> I'm Safe
-            </button>
-            <button class="btn btn-checkin-evac btn-quick-checkin" data-status="evacuating">
-              <span>🏃</span> Evacuating
-            </button>
-            <button class="btn btn-checkin-help btn-quick-checkin" data-status="need_help">
-              <span>🚨</span> Need Help
-            </button>
-          </div>
-
-          <!-- Risk Score Card -->
-          <div class="card" style="margin-bottom: 2rem;">
-            <p class="label-caps" style="margin-bottom: 0.5rem;">CURRENT FLOOD RISK</p>
-            <div style="display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 1rem;">
-              <span id="risk-score-value" style="font-size: 4rem; font-weight: 800; color: var(--accent-orange); line-height: 1;">--</span>
-              <span id="risk-category-label" style="font-size: 1.2rem; color: var(--text-muted); font-weight: 600;">Fetching live data...</span>
-            </div>
-
-            <!-- Risk Gradient Scale Bar -->
-            <div style="position: relative; margin-bottom: 1.5rem;">
-              <div style="height: 10px; border-radius: 5px; background: linear-gradient(to right, var(--risk-low), var(--risk-moderate), var(--risk-high), var(--risk-critical));"></div>
-              <div id="risk-marker" style="position: absolute; top: -4px; left: 0%; transform: translateX(-50%); width: 4px; height: 18px; background: #000; border-radius: 2px; transition: left 0.8s ease;"></div>
-              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem;">
-                <span>Low</span>
-                <span>Moderate</span>
-                <span>High</span>
-                <span>Critical</span>
-              </div>
-            </div>
-
-            <p style="color: var(--accent-orange); font-size: 0.85rem; font-weight: 600;" id="risk-trend-label">↗ Updating from live weather data...</p>
-          </div>
-
-          <!-- Contributing Conditions -->
-          <div style="margin-bottom: 2rem;">
-            <p class="label-caps" style="margin-bottom: 1rem;">WHAT'S CAUSING THIS RISK</p>
-            
-            <div class="condition-row">
-              <span class="condition-label">Rainfall</span>
-              <span class="condition-val" id="val-rainfall">-- mm/h</span>
-              <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-rainfall" style="width: 0%;"></div></div>
-              <span class="condition-pct" id="pct-rainfall">--%</span>
-            </div>
-
-            <div class="condition-row">
-              <span class="condition-label">Ground moisture</span>
-              <span class="condition-val" id="val-soil">--%</span>
-              <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-soil" style="width: 0%;"></div></div>
-              <span class="condition-pct" id="pct-soil">--%</span>
-            </div>
-
-            <div class="condition-row">
-              <span class="condition-label">Distance to water</span>
-              <span class="condition-val" id="val-prox">-- km</span>
-              <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-prox" style="width: 0%;"></div></div>
-              <span class="condition-pct" id="pct-prox">--%</span>
-            </div>
-
-            <div class="condition-row" id="row-crowd-signal" style="display: none;">
-              <span class="condition-label" style="color: #2563EB;">⚠️ Crowd ground reports</span>
-              <span class="condition-val" id="val-crowd-signal" style="color: #2563EB;">+0 pts</span>
-              <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-crowd-signal" style="width: 0%; background: #2563EB;"></div></div>
-              <span class="condition-pct" id="pct-crowd-signal" style="color: #2563EB;">0 verified</span>
-            </div>
-          </div>
-
-          <!-- Small Interactive Overview Map -->
-          <div class="card" style="margin-bottom: 2rem; padding: 0; overflow: hidden; position: relative;">
-            <div style="padding: 1rem 1.5rem 0.5rem;">
-              <p class="label-caps">RISK OVERVIEW MAP</p>
-            </div>
-            <div id="overview-mini-map" style="width: 100%; height: 220px;"></div>
-            <button id="btn-expand-map" class="btn btn-primary btn-sm" style="position: absolute; bottom: 12px; right: 12px; z-index: 1000; box-shadow: var(--shadow-md);">
-              Expand Map →
-            </button>
-          </div>
-
-          <!-- Environmental Conditions Weather Chart -->
-          <div class="card">
-            <p class="label-caps" style="margin-bottom: 1rem;">CURRENT WEATHER</p>
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
-              <div><span class="subtext">TEMPERATURE</span><h3 id="env-temp">--°C</h3></div>
-              <div><span class="subtext">RAINFALL</span><h3 id="env-rain">-- mm/h</h3></div>
-              <div><span class="subtext">HUMIDITY</span><h3 id="env-humidity">--%</h3></div>
-              <div><span class="subtext">WIND</span><h3 id="env-wind">-- km/h</h3></div>
-            </div>
-            <canvas id="precip-canvas" height="120" style="width: 100%;"></canvas>
-          </div>
-
-        </div>
-
-        <!-- Sidebar -->
-        <div class="dashboard-sidebar">
-          <!-- Flash Flood Warning Box -->
-          <div class="card" style="border-left: 4px solid var(--accent-orange); margin-bottom: 1.5rem; background: #FFF9F5;">
-            <p class="label-caps" style="color: var(--accent-orange-hover);">FLASH FLOOD WARNING</p>
-            <p style="font-size: 0.9rem; font-weight: 600; margin: 0.5rem 0;" id="warning-box-body">High flood chance within 4.2 km. Rain is expected to get heavier.</p>
-            <a href="#map" class="nav-tab" data-tab="map" style="color: var(--accent-orange-hover); font-size: 0.85rem; font-weight: 600;">View on map →</a>
-          </div>
-
-          <!-- Quick Access -->
-          <div class="card" style="margin-bottom: 1.5rem;">
-            <p class="label-caps" style="margin-bottom: 0.75rem;">QUICK ACCESS</p>
-            <div id="quick-donate-row" class="quick-link-row quick-link-row-donate" style="cursor:pointer;">
-              <span>🫶 Donate to Flood Relief</span> <span>›</span>
-            </div>
-            <div class="quick-link-row emergency-sos-row nav-tab" data-tab="emergency" style="background: var(--accent-red-light); color: var(--accent-red);">
-              <span>🚨 Emergency SOS</span> <span>›</span>
-            </div>
-            <div class="quick-link-row nav-tab" data-tab="map"><span>Live flood map</span> <span>›</span></div>
-            <div class="quick-link-row nav-tab" data-tab="shelters"><span>Evacuation shelters</span> <span>›</span></div>
-            <div class="quick-link-row nav-tab" data-tab="safety"><span>Safety Circle</span> <span>›</span></div>
-          </div>
-
-
-          <!-- Safety Circle Quick View -->
-          <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-              <p class="label-caps">SAFETY CIRCLE</p>
-              <a href="#safety" class="nav-tab" data-tab="safety" style="font-size: 0.8rem; color: var(--accent-green-dark);">View all</a>
-            </div>
-            <div id="sidebar-safety-contacts"></div>
-          </div>
-        </div>
+    <!-- Top Navigation -->
+    <header class="header-nav">
+      <div class="logo">
+        <div class="logo-icon">~</div>
+        <span>FloodSAHAAY</span>
       </div>
-    </section>
 
-    <!-- 2. MAP TAB -->
-    <section id="tab-map" class="tab-panel">
-      <div style="position: relative; width: 100%; height: calc(100vh - 64px); min-height: 540px;">
-        <div id="main-leaflet-map" style="width: 100%; height: 100%; min-height: 540px;"></div>
-        
-        <!-- Floating Risk Info Panel -->
-        <div class="card" style="position: absolute; top: 1.5rem; left: 1.5rem; z-index: 1000; width: 320px; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(8px); box-shadow: var(--shadow-lg);">
-          <p class="label-caps">SELECTED LOCATION RISK INFO</p>
-          <h3 id="map-info-area" style="margin: 0.25rem 0 0.5rem;">Gomti Nagar, Lucknow</h3>
-          <div style="display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.5rem;">
-            <span id="map-info-score" style="font-size: 2.2rem; font-weight: 800; color: var(--accent-orange);">--</span>
-            <span class="subtext">/ 100</span>
-            <span id="map-info-badge" class="badge badge-high" style="margin-left: auto;">High risk</span>
-          </div>
-          <p id="map-info-details" class="subtext" style="font-size: 0.82rem;">Fetching live risk data...</p>
-          <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.5rem;">💡 Click anywhere on map or search above to select a location.</p>
-        </div>
+      <button id="hamburger-btn" class="nav-hamburger" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav-tabs" id="desktop-nav">
+        <a href="#overview" class="nav-tab active" data-tab="overview"
+          >Overview</a
+        >
+        <a href="#map" class="nav-tab" data-tab="map">Map</a>
+        <a href="#alerts" class="nav-tab" data-tab="alerts"
+          >Alerts
+          <span
+            id="nav-alerts-badge"
+            class="badge badge-critical"
+            style="padding: 2px 6px; font-size: 0.7rem; display: none"
+          ></span
+        ></a>
+        <a href="#emergency" class="nav-tab" data-tab="emergency">Emergency</a>
+        <a href="#safety" class="nav-tab" data-tab="safety">Safety</a>
+        <a href="#shelters" class="nav-tab" data-tab="shelters">Shelters</a>
+        <a href="#recovery" class="nav-tab" data-tab="recovery"
+          >Recovery & First Aid</a
+        >
+        <a href="#helpline" class="nav-tab" data-tab="helpline">Helpline</a>
+      </nav>
+
+      <div class="nav-right">
+        <span
+          id="current-location-label"
+          title="Click to change location"
+          style="
+            cursor: pointer;
+            padding: 0.3rem 0.6rem;
+            background: rgba(0, 0, 0, 0.04);
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+          "
+          >📍 Lucknow</span
+        >
+        <button
+          id="btn-open-donation"
+          class="btn btn-donate btn-sm"
+          title="Donate to government flood relief funds"
+        >
+          🫶 Donate Relief
+        </button>
+        <a href="profile.html">Profile</a>
+        <span class="badge badge-live"
+          ><span class="badge-dot"></span> Live</span
+        >
       </div>
-    </section>
+    </header>
 
-    <!-- 3. ALERTS TAB -->
-    <section id="tab-alerts" class="tab-panel">
-      <div style="max-width: 800px; margin: 2rem auto; padding: 0 1rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-          <h2 class="heading-lg">Active Alerts</h2>
-          <button id="mark-all-read-btn" class="btn btn-secondary btn-sm">Mark all as read</button>
-        </div>
-        
-        <!-- Empty State Container -->
-        <div id="alerts-empty-state" class="card" style="text-align: center; padding: 3rem 1.5rem; display: none;">
-          <div style="font-size: 3rem; margin-bottom: 1rem;">🛡️</div>
-          <h3 class="heading-md" style="margin-bottom: 0.5rem;">No active alerts</h3>
-          <p class="subtext">Everything looks safe in your area right now.</p>
-        </div>
-
-        <div id="alerts-list"></div>
-      </div>
-    </section>
-
-    <!-- 4. EMERGENCY TAB -->
-    <section id="tab-emergency" class="tab-panel">
-      <div class="dashboard-layout">
-        <div class="dashboard-main" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 2rem;">
-          <p class="label-caps" style="margin-bottom: 1.5rem;">PRESS AND HOLD TO SEND SOS</p>
-          
-          <button id="sos-hold-btn" class="sos-btn">
-            <span style="font-size: 1.8rem; font-weight: 800; color: inherit;">SOS</span>
-            <span style="font-size: 0.75rem; opacity: 0.8; color: inherit;">HOLD</span>
-          </button>
-
-          <p class="subtext" style="margin-top: 1.5rem; max-width: 340px; font-size: 0.88rem;">
-            Hold for 2 seconds to activate. Your live GPS coordinates will be dispatched to all emergency contacts.
-          </p>
-
-          <!-- 300m - 400m Nearby Emergency Mesh Network Card -->
-          <div class="card" style="width: 100%; max-width: 580px; margin-top: 2rem; text-align: left; border: 1px solid var(--border);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <!-- TAB CONTENT PANELS -->
+    <main id="tab-container">
+      <!-- 1. OVERVIEW TAB -->
+      <section id="tab-overview" class="tab-panel active">
+        <div class="dashboard-layout">
+          <div class="dashboard-main">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-bottom: 1.5rem;
+              "
+            >
               <div>
-                <span class="label-caps" style="color: var(--accent-orange-hover);">NO MOBILE NETWORK? YOU CAN STILL CONNECT</span>
-                <h3 class="heading-md" style="font-size: 1.1rem; margin-top: 0.2rem;">People Near You (within 300–400m)</h3>
+                <p class="label-caps">MONITORING</p>
+                <h1 class="heading-lg" id="overview-location-heading">
+                  Lucknow, Uttar Pradesh
+                </h1>
               </div>
-              <span class="badge badge-live"><span class="badge-dot"></span> Active</span>
-            </div>
-
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
-              🆘 Stay connected even when there is no mobile network. Your phone can connect with people nearby and send emergency messages.
-            </p>
-
-            <!-- Active Peers Container -->
-            <div id="mesh-peers-container" style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.25rem;">
-              <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                  <span style="font-size: 1.2rem;">👤</span>
-                  <div>
-                    <strong style="font-size: 0.88rem;">Person Nearby</strong>
-                    <p class="subtext" style="font-size: 0.76rem;">120m away · Safe</p>
-                  </div>
-                </div>
-                <button class="btn btn-secondary btn-sm btn-mesh-ping" data-peer="FS-942">Connect</button>
-              </div>
-
-              <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                  <span style="font-size: 1.2rem;">🚨</span>
-                  <div>
-                    <strong style="font-size: 0.88rem; color: var(--accent-red);">Person Needs Help</strong>
-                    <p class="subtext" style="font-size: 0.76rem;">280m away · Contact immediately</p>
-                  </div>
-                </div>
-                <button class="btn btn-primary btn-sm btn-mesh-ping" data-peer="FS-318">Connect</button>
-              </div>
-
-              <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                  <span style="font-size: 1.2rem;">📡</span>
-                  <div>
-                    <strong style="font-size: 0.88rem;">Signal Relay Point</strong>
-                    <p class="subtext" style="font-size: 0.76rem;">380m away · Helping connect people</p>
-                  </div>
-                </div>
-                <span class="badge badge-live" style="font-size: 0.7rem;">Relay</span>
+              <div style="text-align: right">
+                <span class="subtext" id="overview-updated-time"
+                  >Updated recently</span
+                >
+                <span class="badge badge-live" style="margin-left: 0.5rem"
+                  ><span class="badge-dot"></span> Live</span
+                >
               </div>
             </div>
 
-            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-              <button id="btn-broadcast-beacon" class="btn btn-primary btn-sm" style="flex: 1;">📡 Send Help Signal (300m)</button>
-              <button id="btn-scan-mesh" class="btn btn-secondary btn-sm">⚡ Find People Nearby</button>
-            </div>
-          </div>
-        </div>
-
-
-        <div class="dashboard-sidebar">
-          <h3 class="heading-md" style="margin-bottom: 1rem;">Emergency Contacts</h3>
-          <div id="emergency-contacts-list" style="margin-bottom: 1.5rem;"></div>
-          <button id="add-contact-btn" class="btn btn-secondary btn-full">+ Add contact</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- 5. SAFETY TAB -->
-    <section id="tab-safety" class="tab-panel">
-      <div class="dashboard-layout">
-        <div class="dashboard-main">
-          <!-- Big Check-in & Share Row -->
-          <div class="card" style="margin-bottom: 1.5rem; background: #FFFFFF;">
-            <p class="label-caps" style="margin-bottom: 0.5rem;">UPDATE YOUR CURRENT STATUS</p>
-            <div class="checkin-action-bar" style="margin-bottom: 1rem;">
-              <button class="btn btn-checkin-safe btn-quick-checkin" data-status="safe">
+            <!-- Quick Safety Check-in Action Bar -->
+            <div class="checkin-action-bar">
+              <button
+                class="btn btn-checkin-safe btn-quick-checkin"
+                data-status="safe"
+              >
                 <span>✓</span> I'm Safe
               </button>
-              <button class="btn btn-checkin-evac btn-quick-checkin" data-status="evacuating">
+              <button
+                class="btn btn-checkin-evac btn-quick-checkin"
+                data-status="evacuating"
+              >
                 <span>🏃</span> Evacuating
               </button>
-              <button class="btn btn-checkin-help btn-quick-checkin" data-status="need_help">
+              <button
+                class="btn btn-checkin-help btn-quick-checkin"
+                data-status="need_help"
+              >
                 <span>🚨</span> Need Help
               </button>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; border-top: 1px solid var(--border); padding-top: 0.75rem;">
-              <span class="subtext">Low-battery sharing & live public tracking</span>
-              <button id="btn-share-live-location" class="btn btn-secondary btn-sm">
-                🔗 Share Live Location (24h Link)
+
+            <!-- Risk Score Card -->
+            <div class="card" style="margin-bottom: 2rem">
+              <p class="label-caps" style="margin-bottom: 0.5rem">
+                CURRENT FLOOD RISK
+              </p>
+              <div
+                style="
+                  display: flex;
+                  align-items: baseline;
+                  gap: 0.5rem;
+                  margin-bottom: 1rem;
+                "
+              >
+                <span
+                  id="risk-score-value"
+                  style="
+                    font-size: 4rem;
+                    font-weight: 800;
+                    color: var(--accent-orange);
+                    line-height: 1;
+                  "
+                  >--</span
+                >
+                <span
+                  id="risk-category-label"
+                  style="
+                    font-size: 1.2rem;
+                    color: var(--text-muted);
+                    font-weight: 600;
+                  "
+                  >Fetching live data...</span
+                >
+              </div>
+
+              <!-- Risk Gradient Scale Bar -->
+              <div style="position: relative; margin-bottom: 1.5rem">
+                <div
+                  style="
+                    height: 10px;
+                    border-radius: 5px;
+                    background: linear-gradient(
+                      to right,
+                      var(--risk-low),
+                      var(--risk-moderate),
+                      var(--risk-high),
+                      var(--risk-critical)
+                    );
+                  "
+                ></div>
+                <div
+                  id="risk-marker"
+                  style="
+                    position: absolute;
+                    top: -4px;
+                    left: 0%;
+                    transform: translateX(-50%);
+                    width: 4px;
+                    height: 18px;
+                    background: #000;
+                    border-radius: 2px;
+                    transition: left 0.8s ease;
+                  "
+                ></div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                    margin-top: 0.4rem;
+                  "
+                >
+                  <span>Low</span>
+                  <span>Moderate</span>
+                  <span>High</span>
+                  <span>Critical</span>
+                </div>
+              </div>
+
+              <p
+                style="
+                  color: var(--accent-orange);
+                  font-size: 0.85rem;
+                  font-weight: 600;
+                "
+                id="risk-trend-label"
+              >
+                ↗ Updating from live weather data...
+              </p>
+            </div>
+
+            <!-- Contributing Conditions -->
+            <div style="margin-bottom: 2rem">
+              <p class="label-caps" style="margin-bottom: 1rem">
+                WHAT'S CAUSING THIS RISK
+              </p>
+
+              <div class="condition-row">
+                <span class="condition-label">Rainfall</span>
+                <span class="condition-val" id="val-rainfall">-- mm/h</span>
+                <div class="progress-bar-bg">
+                  <div
+                    class="progress-bar-fill"
+                    id="bar-rainfall"
+                    style="width: 0%"
+                  ></div>
+                </div>
+                <span class="condition-pct" id="pct-rainfall">--%</span>
+              </div>
+
+              <div class="condition-row">
+                <span class="condition-label">Ground moisture</span>
+                <span class="condition-val" id="val-soil">--%</span>
+                <div class="progress-bar-bg">
+                  <div
+                    class="progress-bar-fill"
+                    id="bar-soil"
+                    style="width: 0%"
+                  ></div>
+                </div>
+                <span class="condition-pct" id="pct-soil">--%</span>
+              </div>
+
+              <div class="condition-row">
+                <span class="condition-label">Distance to water</span>
+                <span class="condition-val" id="val-prox">-- km</span>
+                <div class="progress-bar-bg">
+                  <div
+                    class="progress-bar-fill"
+                    id="bar-prox"
+                    style="width: 0%"
+                  ></div>
+                </div>
+                <span class="condition-pct" id="pct-prox">--%</span>
+              </div>
+
+              <div
+                class="condition-row"
+                id="row-crowd-signal"
+                style="display: none"
+              >
+                <span class="condition-label" style="color: #2563eb"
+                  >⚠️ Crowd ground reports</span
+                >
+                <span
+                  class="condition-val"
+                  id="val-crowd-signal"
+                  style="color: #2563eb"
+                  >+0 pts</span
+                >
+                <div class="progress-bar-bg">
+                  <div
+                    class="progress-bar-fill"
+                    id="bar-crowd-signal"
+                    style="width: 0%; background: #2563eb"
+                  ></div>
+                </div>
+                <span
+                  class="condition-pct"
+                  id="pct-crowd-signal"
+                  style="color: #2563eb"
+                  >0 verified</span
+                >
+              </div>
+            </div>
+
+            <!-- Small Interactive Overview Map -->
+            <div
+              class="card"
+              style="
+                margin-bottom: 2rem;
+                padding: 0;
+                overflow: hidden;
+                position: relative;
+              "
+            >
+              <div style="padding: 1rem 1.5rem 0.5rem">
+                <p class="label-caps">RISK OVERVIEW MAP</p>
+              </div>
+              <div
+                id="overview-mini-map"
+                style="width: 100%; height: 220px"
+              ></div>
+              <button
+                id="btn-expand-map"
+                class="btn btn-primary btn-sm"
+                style="
+                  position: absolute;
+                  bottom: 12px;
+                  right: 12px;
+                  z-index: 1000;
+                  box-shadow: var(--shadow-md);
+                "
+              >
+                Expand Map →
               </button>
             </div>
-          </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <div>
-              <h2 class="heading-lg">Safety Circle Members</h2>
-              <p class="subtext">Real-time status updates from connected family & emergency contacts.</p>
-            </div>
-            <button id="btn-invite-safety" class="btn btn-primary">+ Invite</button>
-          </div>
-          <div id="safety-people-list"></div>
-        </div>
-        <div class="dashboard-sidebar" style="padding: 0;">
-          <div id="safety-leaflet-map" style="width: 100%; height: 100%; min-height: 400px;"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 6. SHELTERS TAB -->
-    <section id="tab-shelters" class="tab-panel">
-      <div class="dashboard-layout shelters-layout-grid">
-        <div class="dashboard-main shelter-map-container" style="padding: 0;">
-          <div id="shelters-leaflet-map" style="width: 100%; height: 100%; min-height: calc(100vh - 64px);"></div>
-        </div>
-        <div class="dashboard-sidebar">
-          <!-- Route Hazard Warning Container -->
-          <div id="shelter-route-warning-banner" class="route-warning-banner" style="display: none;">
-            <span style="font-size: 1.3rem;">⚠️</span>
-            <div>
-              <strong>Road Obstruction Warning</strong>
-              <p id="shelter-route-warning-msg" style="margin: 0.2rem 0 0.4rem; font-size: 0.82rem;">Route passes near reported flooded underpass.</p>
-              <div id="shelter-alternate-suggestion" style="font-weight: 600; font-size: 0.8rem; color: #1E3A8A;"></div>
-            </div>
-          </div>
-
-          <h3 class="heading-md">Nearby safe shelters</h3>
-          <p class="subtext" style="margin-bottom: 1.5rem;">Ranked by proximity & availability · Real-time occupancy</p>
-          <div id="shelters-list"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 7. HELPLINE TAB -->
-    <section id="tab-helpline" class="tab-panel">
-      <div style="max-width: 1080px; margin: 2rem auto; padding: 0 1.25rem;">
-        <div style="margin-bottom: 2rem;">
-          <p class="label-caps" style="color: var(--accent-orange-hover);">EMERGENCY PHONE NUMBERS</p>
-          <h2 class="heading-lg" style="margin-top: 0.25rem;">Government Emergency Helplines</h2>
-          <p class="subtext" style="margin-top: 0.25rem;">
-            Official 24/7 numbers for flood rescue, medical help, disaster relief, and police. Click any button to copy the number.
-          </p>
-        </div>
-
-        <div class="helpline-grid">
-          <!-- Card 1: NDRF -->
-          <div class="card helpline-card">
-            <div class="helpline-card-header">
-              <div class="helpline-icon">🚁</div>
-              <div>
-                <span class="badge badge-high" style="margin-bottom: 0.25rem;">Disaster Rescue</span>
-                <h3 style="font-size: 1.1rem; font-weight: 700;">National Disaster Response Force (NDRF)</h3>
-              </div>
-            </div>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0;">
-              Dedicated flood rescue operations, evacuation, and swift water disaster response teams across India.
-            </p>
-            <div class="helpline-number-box">
-              <span class="helpline-number">011-24363260</span>
-              <span class="subtext" style="font-size: 0.75rem; margin-left: auto;">24/7 Control Room</span>
-            </div>
-            <div class="helpline-btn-group">
-              <button class="btn btn-secondary btn-sm btn-copy-helpline" data-number="01124363260">
-                📋 Copy Number
-              </button>
-              <a href="tel:01124363260" class="btn btn-primary btn-sm">
-                📞 Call Now
-              </a>
-            </div>
-          </div>
-
-          <!-- Card 2: National Emergency 112 -->
-          <div class="card helpline-card" style="border-left: 4px solid var(--accent-red);">
-            <div class="helpline-card-header">
-              <div class="helpline-icon" style="background: #FFEBE9;">🚨</div>
-              <div>
-                <span class="badge badge-critical" style="margin-bottom: 0.25rem;">National Toll-Free</span>
-                <h3 style="font-size: 1.1rem; font-weight: 700;">National Emergency Number</h3>
-              </div>
-            </div>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0;">
-              Single unified emergency response number for Police, Fire, Ambulance & Disaster Services nationwide.
-            </p>
-            <div class="helpline-number-box">
-              <span class="helpline-number" style="color: var(--accent-red); font-size: 1.5rem;">112</span>
-              <span class="subtext" style="font-size: 0.75rem; margin-left: auto;">Toll-Free · 24x7</span>
-            </div>
-            <div class="helpline-btn-group">
-              <button class="btn btn-secondary btn-sm btn-copy-helpline" data-number="112">
-                📋 Copy Number
-              </button>
-              <a href="tel:112" class="btn btn-danger btn-sm">
-                🚨 Call 112
-              </a>
-            </div>
-          </div>
-
-          <!-- Card 3: SDMA -->
-          <div class="card helpline-card">
-            <div class="helpline-card-header">
-              <div class="helpline-icon">🏛️</div>
-              <div>
-                <span class="badge badge-live" style="margin-bottom: 0.25rem;">State Govt Authority</span>
-                <h3 style="font-size: 1.1rem; font-weight: 700;">State Disaster Management (SDMA)</h3>
-              </div>
-            </div>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0;">
-              State emergency operation center for regional flood warnings, relief camps, and emergency supplies dispatch.
-            </p>
-            <div class="helpline-number-box">
-              <span class="helpline-number">1078</span>
-              <span class="subtext" style="font-size: 0.75rem; margin-left: auto;">State Control Room</span>
-            </div>
-            <div class="helpline-btn-group">
-              <button class="btn btn-secondary btn-sm btn-copy-helpline" data-number="1078">
-                📋 Copy Number
-              </button>
-              <a href="tel:1078" class="btn btn-primary btn-sm">
-                📞 Call Now
-              </a>
-            </div>
-          </div>
-
-          <!-- Card 4: Flood Control Room -->
-          <div class="card helpline-card">
-            <div class="helpline-card-header">
-              <div class="helpline-icon">🌊</div>
-              <div>
-                <span class="badge badge-high" style="margin-bottom: 0.25rem;">Flood Advisory</span>
-                <h3 style="font-size: 1.1rem; font-weight: 700;">District Flood Control Helpline</h3>
-              </div>
-            </div>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0;">
-              Real-time river level updates, embankment breach reporting, and local community evacuation assistance.
-            </p>
-            <div class="helpline-number-box">
-              <span class="helpline-number">1070</span>
-              <span class="subtext" style="font-size: 0.75rem; margin-left: auto;">Toll-Free Control Room</span>
-            </div>
-            <div class="helpline-btn-group">
-              <button class="btn btn-secondary btn-sm btn-copy-helpline" data-number="1070">
-                📋 Copy Number
-              </button>
-              <a href="tel:1070" class="btn btn-primary btn-sm">
-                📞 Call Now
-              </a>
-            </div>
-          </div>
-
-          <!-- Card 5: Medical Ambulance -->
-          <div class="card helpline-card">
-            <div class="helpline-card-header">
-              <div class="helpline-icon" style="background: #E8F5E9;">🚑</div>
-              <div>
-                <span class="badge badge-live" style="margin-bottom: 0.25rem;">Medical Emergency</span>
-                <h3 style="font-size: 1.1rem; font-weight: 700;">National Health & Ambulance Service</h3>
-              </div>
-            </div>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0;">
-              Emergency medical transport, trauma care, and boat-ambulance dispatch in flooded submergence zones.
-            </p>
-            <div class="helpline-number-box">
-              <span class="helpline-number">108</span>
-              <span class="subtext" style="font-size: 0.75rem; margin-left: auto;">24/7 Ambulance</span>
-            </div>
-            <div class="helpline-btn-group">
-              <button class="btn btn-secondary btn-sm btn-copy-helpline" data-number="108">
-                📋 Copy Number
-              </button>
-              <a href="tel:108" class="btn btn-primary btn-sm">
-                📞 Call 108
-              </a>
-            </div>
-          </div>
-
-          <!-- Card 6: Police Assistance -->
-          <div class="card helpline-card">
-            <div class="helpline-card-header">
-              <div class="helpline-icon" style="background: #EBF3FE;">🛡️</div>
-              <div>
-                <span class="badge badge-live" style="margin-bottom: 0.25rem;">Security & Law</span>
-                <h3 style="font-size: 1.1rem; font-weight: 700;">Police & Security Helpline</h3>
-              </div>
-            </div>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0;">
-              Immediate security deployment, law enforcement during evacuations, and missing person search assistance.
-            </p>
-            <div class="helpline-number-box">
-              <span class="helpline-number">100</span>
-              <span class="subtext" style="font-size: 0.75rem; margin-left: auto;">Police Control</span>
-            </div>
-            <div class="helpline-btn-group">
-              <button class="btn btn-secondary btn-sm btn-copy-helpline" data-number="100">
-                📋 Copy Number
-              </button>
-              <a href="tel:100" class="btn btn-primary btn-sm">
-                📞 Call 100
-              </a>
-            </div>
-          </div>
-
-          <!-- Card 7: Fire & Rescue -->
-          <div class="card helpline-card">
-            <div class="helpline-card-header">
-              <div class="helpline-icon" style="background: #FFF3E0;">🚒</div>
-              <div>
-                <span class="badge badge-high" style="margin-bottom: 0.25rem;">Rescue Ops</span>
-                <h3 style="font-size: 1.1rem; font-weight: 700;">Fire & Disaster Rescue Services</h3>
-              </div>
-            </div>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0;">
-              Heavy rescue gear, building collapse response, and water pumping assistance during heavy inundation.
-            </p>
-            <div class="helpline-number-box">
-              <span class="helpline-number">101</span>
-              <span class="subtext" style="font-size: 0.75rem; margin-left: auto;">Fire Station Desk</span>
-            </div>
-            <div class="helpline-btn-group">
-              <button class="btn btn-secondary btn-sm btn-copy-helpline" data-number="101">
-                📋 Copy Number
-              </button>
-              <a href="tel:101" class="btn btn-primary btn-sm">
-                📞 Call 101
-              </a>
-            </div>
-          </div>
-
-          <!-- Card 8: Red Cross Relief -->
-          <div class="card helpline-card">
-            <div class="helpline-card-header">
-              <div class="helpline-icon" style="background: #FFEBEE;">❤️</div>
-              <div>
-                <span class="badge badge-live" style="margin-bottom: 0.25rem;">Humanitarian Aid</span>
-                <h3 style="font-size: 1.1rem; font-weight: 700;">Indian Red Cross Disaster Relief</h3>
-              </div>
-            </div>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0;">
-              Emergency medical kits, clean drinking water distribution, food ration packs, and temporary shelter kits.
-            </p>
-            <div class="helpline-number-box">
-              <span class="helpline-number">011-23716441</span>
-              <span class="subtext" style="font-size: 0.75rem; margin-left: auto;">Relief Headquarters</span>
-            </div>
-            <div class="helpline-btn-group">
-              <button class="btn btn-secondary btn-sm btn-copy-helpline" data-number="01123716441">
-                📋 Copy Number
-              </button>
-              <a href="tel:01123716441" class="btn btn-primary btn-sm">
-                📞 Call Now
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 7. RECOVERY, FIRST AID & SURVIVAL MANUAL TAB -->
-    <section id="tab-recovery" class="tab-panel">
-      <div style="max-width: 1100px; margin: 1.5rem auto; padding: 0 1rem;">
-        
-        <!-- Tab Header -->
-        <div style="margin-bottom: 2rem;">
-          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-            <span class="badge badge-critical" style="font-weight: 700; letter-spacing: 0.5px;">MEDICAL & RECOVERY</span>
-            <span class="subtext">Offline-ready survival protocols</span>
-          </div>
-          <h1 class="heading-lg" style="margin: 0.2rem 0;">Post-Flood Recovery, First Aid & Survival Guide</h1>
-          <p class="subtext" style="font-size: 0.95rem;">
-            Essential emergency procedures, snake bite response, water decontamination, wound care, and government relief compensation.
-          </p>
-        </div>
-
-        <!-- 1. SNAKE BITE EMERGENCY PROTOCOL (TOP CRITICAL SECTION) -->
-        <div class="card" style="margin-bottom: 2rem; border: 2px solid #DC2626; background: #FFF; box-shadow: 0 4px 20px rgba(220, 38, 38, 0.1); border-radius: 12px; overflow: hidden; padding: 0;">
-          <!-- Banner Header -->
-          <div style="background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%); color: #FFF; padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <span style="font-size: 2.2rem; line-height: 1;">🐍</span>
-              <div>
-                <span class="badge" style="background: #FEF2F2; color: #DC2626; font-weight: 800; font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 0.2rem;">CRITICAL FLOOD HAZARD</span>
-                <h2 style="font-size: 1.3rem; font-weight: 800; color: #FFF; margin: 0;">Snake Bite Emergency Management Protocol</h2>
-              </div>
-            </div>
-            <a href="tel:108" class="btn" style="background: #FFF; color: #DC2626; font-weight: 800; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px;">
-              🚨 Call Ambulance 108
-            </a>
-          </div>
-
-          <!-- Snake Bite Content Body -->
-          <div style="padding: 1.5rem;">
-            <p style="font-size: 0.92rem; color: #374151; line-height: 1.6; margin-bottom: 1.25rem;">
-              <strong>Why Snake Bites Surge After Floods:</strong> Floodwaters submerge ground burrows, driving snakes (Cobras, Russell's Vipers, Kraits) to take refuge in dry huts, rooftops, furniture, bedding, and tree branches. <em>Anti-Snake Venom (ASV) administered in a hospital is the ONLY cure.</em>
-            </p>
-
-            <!-- DOs vs DONTs Grid -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;" class="recovery-split-grid">
-              
-              <!-- DO'S -->
-              <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 1.25rem;">
-                <h3 style="font-size: 1.05rem; font-weight: 800; color: #166534; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
-                  <span>✅</span> WHAT TO DO IMMEDIATELY (Do's)
-                </h3>
-                <ul style="padding-left: 1.2rem; font-size: 0.88rem; color: #14532D; line-height: 1.6; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
-                  <li><strong>Keep the victim 100% calm and immobile:</strong> Any movement, panic, or walking increases heart rate and speeds up venom dissemination through the lymphatic system.</li>
-                  <li><strong>Immobilize the bitten limb:</strong> Splint the arm or leg with a firm stick or rolled cardboard and a broad, snug bandage. Prevent any joint from bending.</li>
-                  <li><strong>Keep the bite BELOW heart level:</strong> Prevents rapid venous rush toward vital organs.</li>
-                  <li><strong>Remove tight items immediately:</strong> Rings, bracelets, watches, anklets, and shoes MUST come off before swelling becomes severe.</li>
-                  <li><strong>Remember snake appearance (if safe):</strong> Note color, head shape, and stripe pattern to tell doctors. Do NOT try to catch or kill the snake.</li>
-                  <li><strong>Transport immediately to hospital:</strong> Keep patient lying flat on their side (Recovery Position) during transport.</li>
-                </ul>
-              </div>
-
-              <!-- DONT'S -->
-              <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 1.25rem;">
-                <h3 style="font-size: 1.05rem; font-weight: 800; color: #991B1B; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
-                  <span>❌</span> WHAT NEVER TO DO (Deadly Myths)
-                </h3>
-                <ul style="padding-left: 1.2rem; font-size: 0.88rem; color: #7F1D1D; line-height: 1.6; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
-                  <li><strong>DO NOT cut, slash, or make incisions:</strong> Cutting through bite punctures damages nerves, causes uncontrollable arterial bleeding, and worsens infection.</li>
-                  <li><strong>DO NOT suck venom with mouth or pump:</strong> Venom is absorbed deep in tissue within seconds. Mouth contact can poison the rescuer.</li>
-                  <li><strong>DO NOT apply tight tourniquets or ropes:</strong> Cutting off arterial blood flow causes severe localized tissue death (gangrene) and limb amputation.</li>
-                  <li><strong>DO NOT apply ice, electricity, or chemicals:</strong> Ice causes severe frostbite necrosis; electric shocks can cause cardiac arrest.</li>
-                  <li><strong>DO NOT visit faith healers (Jhad-phook):</strong> Wastes the "Golden Hour" (first 60–90 mins) when Anti-Snake Venom is most effective.</li>
-                  <li><strong>DO NOT give aspirin, pain pills, or alcohol:</strong> Aspirin thins blood and increases internal bleeding from viper bites.</li>
-                </ul>
-              </div>
-            </div>
-
-            <!-- Anti-venom contact strip -->
-            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-              <div>
-                <strong style="font-size: 0.9rem; color: #1E293B;">Nearest Anti-Venom Equipped Hospitals (Lucknow / UP Region):</strong>
-                <p class="subtext" style="font-size: 0.82rem; margin: 0.2rem 0 0;">Polyvalent anti-venom available 24x7 in Emergency Casualty Desks.</p>
-              </div>
-              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                <a href="tel:05222257540" class="btn btn-secondary btn-sm" style="font-weight: 700; color: #DC2626;">🏥 KGMU Trauma: 0522-2257540</a>
-                <a href="tel:05222224011" class="btn btn-secondary btn-sm" style="font-weight: 700; color: #DC2626;">🏥 Balrampur Civil: 0522-2224011</a>
-                <a href="tel:108" class="btn btn-primary btn-sm" style="background: #DC2626; border-color: #DC2626;">🚨 Ambulance 108</a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 2. MEDICAL & SURVIVAL PROTOCOLS GRID -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-          
-          <!-- Card A: Contaminated Wound Care & Tetanus -->
-          <div class="card" style="border-top: 4px solid #2563EB;">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-              <span style="font-size: 1.8rem;">🩹</span>
-              <div>
-                <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0;">Flood Wound Care & Tetanus</h3>
-                <span class="subtext" style="font-size: 0.76rem;">Infection & Leptospirosis Control</span>
-              </div>
-            </div>
-            <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.75rem;">
-              Floodwater contains raw sewage, soil bacteria, and leptospira organisms from rodent urine. Open cuts exposed to floodwaters carry life-threatening infection risks.
-            </p>
-            <div style="background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.82rem; line-height: 1.6; margin-bottom: 0.75rem;">
-              <strong>Step-by-step cleaning:</strong><br>
-              1. Flush wound thoroughly with clean boiled/bottled water and soap.<br>
-              2. Apply Povidone-Iodine (Betadine 10%) or chlorhexidine antiseptic.<br>
-              3. Cover with sterile gauze; keep elevated and dry.<br>
-              4. <strong>Tetanus Toxoid (TT) Warning:</strong> If wound was caused by rusty metal, submerged tin, or nails, get a TT injection within <strong>48 hours</strong>.
-            </div>
-            <div style="font-size: 0.8rem; color: #1D4ED8; font-weight: 600;">
-              ⚠️ Watch for "Rat Fever" (Leptospirosis): High fever, yellowing eyes (jaundice), red eyes, and severe calf muscle pain.
-            </div>
-          </div>
-
-          <!-- Card B: Drowning Resuscitation & CPR -->
-          <div class="card" style="border-top: 4px solid #EF4444;">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-              <span style="font-size: 1.8rem;">🫀</span>
-              <div>
-                <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0;">Drowning Resuscitation & CPR</h3>
-                <span class="subtext" style="font-size: 0.76rem;">Emergency Airway Revival</span>
-              </div>
-            </div>
-            <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.75rem;">
-              When a person is pulled unconscious from floodwater, brain survival depends on immediate oxygenation within 3–4 minutes.
-            </p>
-            <div style="background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.82rem; line-height: 1.6; margin-bottom: 0.75rem;">
-              <strong>CPR Protocol:</strong><br>
-              1. <strong>Check responsiveness:</strong> Tap shoulders and shout. Check breathing for 10 seconds.<br>
-              2. <strong>Hands-Only CPR:</strong> Place hands in center of victim's chest. Press hard and fast (100–120 compressions/min, 2 inches deep).<br>
-              3. <strong>If trained in breaths:</strong> Give 30 compressions followed by 2 gentle rescue breaths (head tilt, chin lift).<br>
-              4. <strong>Recovery Position:</strong> If breathing resumes, turn victim onto their side with upper knee bent to prevent choking on vomited water.
-            </div>
-            <div style="font-size: 0.8rem; color: #DC2626; font-weight: 600;">
-              🚨 Never attempt to drain water from the stomach with abdominal thrusts—it causes regurgitation into lungs.
-            </div>
-          </div>
-
-          <!-- Card C: Water Purification & DIY ORS -->
-          <div class="card" style="border-top: 4px solid #059669;">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-              <span style="font-size: 1.8rem;">💧</span>
-              <div>
-                <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0;">Safe Drinking Water & DIY ORS</h3>
-                <span class="subtext" style="font-size: 0.76rem;">Prevent Cholera, Typhoid & Dehydration</span>
-              </div>
-            </div>
-            <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.75rem;">
-              Municipal pipes and groundwater wells become heavily contaminated during floods. Never drink unfiltered or unboiled tap water.
-            </p>
-            <div style="background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.82rem; line-height: 1.6; margin-bottom: 0.75rem;">
-              <strong>3 Purification Methods:</strong><br>
-              • <strong>Vigorous Boiling:</strong> Rolling boil for at least 1–3 minutes.<br>
-              • <strong>Halazone/Chlorine Tablets:</strong> 1 tablet per 20 Liters of clear water. Wait 30 minutes before drinking.<br>
-              • <strong>Liquid Chlorine (5%):</strong> 2 drops per Liter of clear water.<br>
-              <strong>Life-Saving DIY ORS Formula:</strong><br>
-              Mix <strong>1 Litre boiled water</strong> + <strong>6 teaspoons sugar</strong> + <strong>1/2 teaspoon salt</strong>. Administer frequently for diarrhea/vomiting.
-            </div>
-            <div style="font-size: 0.8rem; color: #059669; font-weight: 600;">
-              ✓ Safe storage: Store treated water in narrow-mouth, covered containers to prevent recontamination.
-            </div>
-          </div>
-
-          <!-- Card D: Trench Foot & Fungal Infection -->
-          <div class="card" style="border-top: 4px solid #D97706;">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-              <span style="font-size: 1.8rem;">🦶</span>
-              <div>
-                <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0;">Trench Foot & Fungal Skin Care</h3>
-                <span class="subtext" style="font-size: 0.76rem;">Prolonged Wet Foot Management</span>
-              </div>
-            </div>
-            <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.75rem;">
-              Standing in wet footwear or damp mud for more than 10–12 hours constricts blood vessels, destroying nerve endings and skin tissue (Immersion Foot).
-            </p>
-            <div style="background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.82rem; line-height: 1.6; margin-bottom: 0.75rem;">
-              <strong>Prevention Guidelines:</strong><br>
-              • Remove wet shoes and socks as soon as reaching dry shelter.<br>
-              • Wash feet with clean water and mild soap; dry thoroughly between toes.<br>
-              • Elevate feet above heart level for 30 minutes to restore circulation.<br>
-              • Apply antifungal powder (Clotrimazole) or coconut oil to prevent skin cracking.<br>
-              • <strong>Warning signs:</strong> Cold, numb, white, or blotchy blue skin requires urgent medical evaluation.
-            </div>
-          </div>
-
-          <!-- Card E: Electrical & LPG Gas Safety -->
-          <div class="card" style="border-top: 4px solid #7C3AED;">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-              <span style="font-size: 1.8rem;">⚡</span>
-              <div>
-                <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0;">Electrical & Gas Re-Entry Safety</h3>
-                <span class="subtext" style="font-size: 0.76rem;">Prevent Electrocution & Explosions</span>
-              </div>
-            </div>
-            <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.75rem;">
-              Submerged electrical wiring and dislodged LPG gas cylinders cause fatal accidents when floodwaters recede.
-            </p>
-            <div style="background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.82rem; line-height: 1.6; margin-bottom: 0.75rem;">
-              <strong>Re-entry Precautions:</strong><br>
-              • <strong>Never step in water near outlets or appliances:</strong> Water conducts current even from partially submerged sockets.<br>
-              • <strong>Switch off main circuit breaker</strong> only if the fuse box and your standing area are completely dry.<br>
-              • <strong>Smell for gas (LPG):</strong> If you smell rotten eggs/sulfur, DO NOT turn on any light switch, match, or lighter. Evacuate immediately.<br>
-              • <strong>Do not use flooded electronics:</strong> Motors, inverters, and refrigerators must be dried and certified by a technician before power-on.
-            </div>
-          </div>
-
-          <!-- Card F: Structural Collapse Safety -->
-          <div class="card" style="border-top: 4px solid #4B5563;">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-              <span style="font-size: 1.8rem;">🏚️</span>
-              <div>
-                <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0;">Building & Structural Inspection</h3>
-                <span class="subtext" style="font-size: 0.76rem;">Avoid Ceiling Collapses & Sinkholes</span>
-              </div>
-            </div>
-            <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.75rem;">
-              Receding floodwaters erode foundation soil, causing unexpected wall collapses and sinkholes.
-            </p>
-            <div style="background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.82rem; line-height: 1.6; margin-bottom: 0.75rem;">
-              <strong>Checklist Before Re-Entering Home:</strong><br>
-              • Look for horizontal or diagonal cracks in exterior walls.<br>
-              • Check if roof or ceiling is sagging under absorbed water weight.<br>
-              • Tap on floor tiles to verify soil beneath hasn't washed away.<br>
-              • Avoid leaning against boundary walls or waterlogged brick structures.<br>
-              • Discard all contaminated mattresses, pillows, and soaked upholstered furniture to stop black mold spores.
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. OFFICIAL DISASTER RELIEF DAMAGE CLAIMS MODULE -->
-        <div style="margin-top: 2.5rem; border-top: 2px dashed var(--border); padding-top: 2rem;">
-          <div style="margin-bottom: 1.5rem;">
-            <span class="label-caps" style="color: var(--primary);">GOVERNMENT RELIEF & REHABILITATION</span>
-            <h2 class="heading-lg" style="margin: 0.2rem 0;">File Flood Damage Assessment Claim</h2>
-            <p class="subtext">
-              Submit verified documentation of damages to residential property, crops, vehicles, or livestock for official SDRF/NDRF relief compensation.
-            </p>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;" class="recovery-split-grid">
-            
-            <!-- Damage Claim Form -->
+            <!-- Environmental Conditions Weather Chart -->
             <div class="card">
-              <h3 class="heading-md" style="margin-bottom: 0.25rem;">New Damage Claim</h3>
-              <p class="subtext" style="margin-bottom: 1.25rem;">Complete details and attach photos for expedited inspection.</p>
+              <p class="label-caps" style="margin-bottom: 1rem">
+                CURRENT WEATHER
+              </p>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(4, 1fr);
+                  gap: 1rem;
+                  margin-bottom: 1.5rem;
+                "
+              >
+                <div>
+                  <span class="subtext">TEMPERATURE</span>
+                  <h3 id="env-temp">--°C</h3>
+                </div>
+                <div>
+                  <span class="subtext">RAINFALL</span>
+                  <h3 id="env-rain">-- mm/h</h3>
+                </div>
+                <div>
+                  <span class="subtext">HUMIDITY</span>
+                  <h3 id="env-humidity">--%</h3>
+                </div>
+                <div>
+                  <span class="subtext">WIND</span>
+                  <h3 id="env-wind">-- km/h</h3>
+                </div>
+              </div>
+              <canvas
+                id="precip-canvas"
+                height="120"
+                style="width: 100%"
+              ></canvas>
+            </div>
+          </div>
 
-              <form id="damage-report-form">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
-                  <div>
-                    <label class="label-caps">CATEGORY</label>
-                    <select id="dmg-category" class="input" required>
-                      <option value="house">Residential House</option>
-                      <option value="crop">Agricultural Crop</option>
-                      <option value="vehicle">Vehicle / Motor</option>
-                      <option value="livestock">Livestock / Cattle</option>
-                      <option value="infrastructure">Commercial / Shop</option>
-                      <option value="other">Other Assets</option>
-                    </select>
+          <!-- Sidebar -->
+          <div class="dashboard-sidebar">
+            <!-- Flash Flood Warning Box -->
+            <div
+              class="card"
+              style="
+                border-left: 4px solid var(--accent-orange);
+                margin-bottom: 1.5rem;
+                background: #fff9f5;
+              "
+            >
+              <p class="label-caps" style="color: var(--accent-orange-hover)">
+                FLASH FLOOD WARNING
+              </p>
+              <p
+                style="font-size: 0.9rem; font-weight: 600; margin: 0.5rem 0"
+                id="warning-box-body"
+              >
+                High flood chance within 4.2 km. Rain is expected to get
+                heavier.
+              </p>
+              <a
+                href="#map"
+                class="nav-tab"
+                data-tab="map"
+                style="
+                  color: var(--accent-orange-hover);
+                  font-size: 0.85rem;
+                  font-weight: 600;
+                "
+                >View on map →</a
+              >
+            </div>
+
+            <!-- Quick Access -->
+            <div class="card" style="margin-bottom: 1.5rem">
+              <p class="label-caps" style="margin-bottom: 0.75rem">
+                QUICK ACCESS
+              </p>
+              <div
+                id="quick-donate-row"
+                class="quick-link-row quick-link-row-donate"
+                style="cursor: pointer"
+              >
+                <span>🫶 Donate to Flood Relief</span> <span>›</span>
+              </div>
+              <div
+                class="quick-link-row emergency-sos-row nav-tab"
+                data-tab="emergency"
+                style="
+                  background: var(--accent-red-light);
+                  color: var(--accent-red);
+                "
+              >
+                <span>🚨 Emergency SOS</span> <span>›</span>
+              </div>
+              <div class="quick-link-row nav-tab" data-tab="map">
+                <span>Live flood map</span> <span>›</span>
+              </div>
+              <div class="quick-link-row nav-tab" data-tab="shelters">
+                <span>Evacuation shelters</span> <span>›</span>
+              </div>
+              <div class="quick-link-row nav-tab" data-tab="safety">
+                <span>Safety Circle</span> <span>›</span>
+              </div>
+            </div>
+
+            <!-- Safety Circle Quick View -->
+            <div class="card">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 1rem;
+                "
+              >
+                <p class="label-caps">SAFETY CIRCLE</p>
+                <a
+                  href="#safety"
+                  class="nav-tab"
+                  data-tab="safety"
+                  style="font-size: 0.8rem; color: var(--accent-green-dark)"
+                  >View all</a
+                >
+              </div>
+              <div id="sidebar-safety-contacts"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. MAP TAB -->
+      <section id="tab-map" class="tab-panel">
+        <div
+          style="
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 64px);
+            min-height: 540px;
+          "
+        >
+          <div
+            id="main-leaflet-map"
+            style="width: 100%; height: 100%; min-height: 540px"
+          ></div>
+
+          <!-- Floating Risk Info Panel -->
+          <div
+            class="card"
+            style="
+              position: absolute;
+              top: 1.5rem;
+              left: 1.5rem;
+              z-index: 1000;
+              width: 320px;
+              background: rgba(255, 255, 255, 0.96);
+              backdrop-filter: blur(8px);
+              box-shadow: var(--shadow-lg);
+            "
+          >
+            <p class="label-caps">SELECTED LOCATION RISK INFO</p>
+            <h3 id="map-info-area" style="margin: 0.25rem 0 0.5rem">
+              Gomti Nagar, Lucknow
+            </h3>
+            <div
+              style="
+                display: flex;
+                align-items: baseline;
+                gap: 0.5rem;
+                margin-bottom: 0.5rem;
+              "
+            >
+              <span
+                id="map-info-score"
+                style="
+                  font-size: 2.2rem;
+                  font-weight: 800;
+                  color: var(--accent-orange);
+                "
+                >--</span
+              >
+              <span class="subtext">/ 100</span>
+              <span
+                id="map-info-badge"
+                class="badge badge-high"
+                style="margin-left: auto"
+                >High risk</span
+              >
+            </div>
+            <p id="map-info-details" class="subtext" style="font-size: 0.82rem">
+              Fetching live risk data...
+            </p>
+            <p
+              style="
+                font-size: 0.72rem;
+                color: var(--text-muted);
+                margin-top: 0.5rem;
+              "
+            >
+              💡 Click anywhere on map or search above to select a location.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. ALERTS TAB -->
+      <section id="tab-alerts" class="tab-panel">
+        <div style="max-width: 800px; margin: 2rem auto; padding: 0 1rem">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 1.5rem;
+            "
+          >
+            <h2 class="heading-lg">Active Alerts</h2>
+            <button id="mark-all-read-btn" class="btn btn-secondary btn-sm">
+              Mark all as read
+            </button>
+          </div>
+
+          <!-- Empty State Container -->
+          <div
+            id="alerts-empty-state"
+            class="card"
+            style="text-align: center; padding: 3rem 1.5rem; display: none"
+          >
+            <div style="font-size: 3rem; margin-bottom: 1rem">🛡️</div>
+            <h3 class="heading-md" style="margin-bottom: 0.5rem">
+              No active alerts
+            </h3>
+            <p class="subtext">Everything looks safe in your area right now.</p>
+          </div>
+
+          <div id="alerts-list"></div>
+        </div>
+      </section>
+
+      <!-- 4. EMERGENCY TAB -->
+      <section id="tab-emergency" class="tab-panel">
+        <div class="dashboard-layout">
+          <div
+            class="dashboard-main"
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              text-align: center;
+              padding-top: 2rem;
+            "
+          >
+            <p class="label-caps" style="margin-bottom: 1.5rem">
+              PRESS AND HOLD TO SEND SOS
+            </p>
+
+            <button id="sos-hold-btn" class="sos-btn">
+              <span style="font-size: 1.8rem; font-weight: 800; color: inherit"
+                >SOS</span
+              >
+              <span style="font-size: 0.75rem; opacity: 0.8; color: inherit"
+                >HOLD</span
+              >
+            </button>
+
+            <p
+              class="subtext"
+              style="margin-top: 1.5rem; max-width: 340px; font-size: 0.88rem"
+            >
+              Hold for 2 seconds to activate. Your live GPS coordinates will be
+              dispatched to all emergency contacts.
+            </p>
+
+            <!-- 300m - 400m Nearby Emergency Mesh Network Card -->
+            <div
+              class="card"
+              style="
+                width: 100%;
+                max-width: 580px;
+                margin-top: 2rem;
+                text-align: left;
+                border: 1px solid var(--border);
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 1rem;
+                "
+              >
+                <div>
+                  <span
+                    class="label-caps"
+                    style="color: var(--accent-orange-hover)"
+                    >NO MOBILE NETWORK? YOU CAN STILL CONNECT</span
+                  >
+                  <h3
+                    class="heading-md"
+                    style="font-size: 1.1rem; margin-top: 0.2rem"
+                  >
+                    People Near You (within 300–400m)
+                  </h3>
+                </div>
+                <span class="badge badge-live"
+                  ><span class="badge-dot"></span> Active</span
+                >
+              </div>
+
+              <p
+                style="
+                  font-size: 0.85rem;
+                  color: var(--text-secondary);
+                  margin-bottom: 1.25rem;
+                  line-height: 1.5;
+                "
+              >
+                🆘 Stay connected even when there is no mobile network. Your
+                phone can connect with people nearby and send emergency
+                messages.
+              </p>
+
+              <!-- Active Peers Container -->
+              <div
+                id="mesh-peers-container"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 0.6rem;
+                  margin-bottom: 1.25rem;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: var(--bg-card-muted);
+                    padding: 0.75rem 1rem;
+                    border-radius: var(--radius-sm);
+                    border: 1px solid var(--border);
+                  "
+                >
+                  <div style="display: flex; align-items: center; gap: 0.75rem">
+                    <span style="font-size: 1.2rem">👤</span>
+                    <div>
+                      <strong style="font-size: 0.88rem">Person Nearby</strong>
+                      <p class="subtext" style="font-size: 0.76rem">
+                        120m away · Safe
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <label class="label-caps">SEVERITY</label>
-                    <select id="dmg-severity" class="input" required>
-                      <option value="minor">Minor Damage (< 25%)</option>
-                      <option value="moderate">Moderate Damage (25–50%)</option>
-                      <option value="severe">Severe Damage (50–75%)</option>
-                      <option value="destroyed">Total Collapse (100%)</option>
-                    </select>
+                  <button
+                    class="btn btn-secondary btn-sm btn-mesh-ping"
+                    data-peer="FS-942"
+                  >
+                    Connect
+                  </button>
+                </div>
+
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: var(--bg-card-muted);
+                    padding: 0.75rem 1rem;
+                    border-radius: var(--radius-sm);
+                    border: 1px solid var(--border);
+                  "
+                >
+                  <div style="display: flex; align-items: center; gap: 0.75rem">
+                    <span style="font-size: 1.2rem">🚨</span>
+                    <div>
+                      <strong
+                        style="font-size: 0.88rem; color: var(--accent-red)"
+                        >Person Needs Help</strong
+                      >
+                      <p class="subtext" style="font-size: 0.76rem">
+                        280m away · Contact immediately
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    class="btn btn-primary btn-sm btn-mesh-ping"
+                    data-peer="FS-318"
+                  >
+                    Connect
+                  </button>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 0.75rem;">
-                  <label class="label-caps">ESTIMATED LOSS IN RUPEES (INR ₹)</label>
-                  <input type="number" id="dmg-loss" class="input" placeholder="e.g. 85000" min="0" required>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: var(--bg-card-muted);
+                    padding: 0.75rem 1rem;
+                    border-radius: var(--radius-sm);
+                    border: 1px solid var(--border);
+                  "
+                >
+                  <div style="display: flex; align-items: center; gap: 0.75rem">
+                    <span style="font-size: 1.2rem">📡</span>
+                    <div>
+                      <strong style="font-size: 0.88rem"
+                        >Signal Relay Point</strong
+                      >
+                      <p class="subtext" style="font-size: 0.76rem">
+                        380m away · Helping connect people
+                      </p>
+                    </div>
+                  </div>
+                  <span class="badge badge-live" style="font-size: 0.7rem"
+                    >Relay</span
+                  >
                 </div>
+              </div>
 
-                <div class="form-group" style="margin-bottom: 0.75rem;">
-                  <label class="label-caps">DESCRIPTION OF LOSS & ASSET DETAILS</label>
-                  <textarea id="dmg-description" class="input" rows="2" placeholder="Explain damage to boundary walls, roof, crops, electrical fixtures..." required></textarea>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 1.25rem;">
-                  <label class="label-caps">DAMAGE PHOTOS (UP TO 3)</label>
-                  <input type="file" id="dmg-photos-input" accept="image/*" class="input" multiple>
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-full">
-                  📑 Submit Claim for Verification
+              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap">
+                <button
+                  id="btn-broadcast-beacon"
+                  class="btn btn-primary btn-sm"
+                  style="flex: 1"
+                >
+                  📡 Send Help Signal (300m)
                 </button>
-              </form>
+                <button id="btn-scan-mesh" class="btn btn-secondary btn-sm">
+                  ⚡ Find People Nearby
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-sidebar">
+            <h3 class="heading-md" style="margin-bottom: 1rem">
+              Emergency Contacts
+            </h3>
+            <div
+              id="emergency-contacts-list"
+              style="margin-bottom: 1.5rem"
+            ></div>
+            <button id="add-contact-btn" class="btn btn-secondary btn-full">
+              + Add contact
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. SAFETY TAB -->
+      <section id="tab-safety" class="tab-panel">
+        <div class="dashboard-layout">
+          <div class="dashboard-main">
+            <!-- Big Check-in & Share Row -->
+            <div
+              class="card"
+              style="margin-bottom: 1.5rem; background: #ffffff"
+            >
+              <p class="label-caps" style="margin-bottom: 0.5rem">
+                UPDATE YOUR CURRENT STATUS
+              </p>
+              <div class="checkin-action-bar" style="margin-bottom: 1rem">
+                <button
+                  class="btn btn-checkin-safe btn-quick-checkin"
+                  data-status="safe"
+                >
+                  <span>✓</span> I'm Safe
+                </button>
+                <button
+                  class="btn btn-checkin-evac btn-quick-checkin"
+                  data-status="evacuating"
+                >
+                  <span>🏃</span> Evacuating
+                </button>
+                <button
+                  class="btn btn-checkin-help btn-quick-checkin"
+                  data-status="need_help"
+                >
+                  <span>🚨</span> Need Help
+                </button>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  flex-wrap: wrap;
+                  gap: 0.5rem;
+                  border-top: 1px solid var(--border);
+                  padding-top: 0.75rem;
+                "
+              >
+                <span class="subtext"
+                  >Low-battery sharing & live public tracking</span
+                >
+                <button
+                  id="btn-share-live-location"
+                  class="btn btn-secondary btn-sm"
+                >
+                  🔗 Share Live Location (24h Link)
+                </button>
+              </div>
             </div>
 
-            <!-- My Claims History -->
-            <div class="card">
-              <h3 class="heading-md" style="margin-bottom: 0.25rem;">My Submitted Claims</h3>
-              <p class="subtext" style="margin-bottom: 1.25rem;">Track relief assessment verification status.</p>
-              <div id="my-damage-claims-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <span class="subtext">Loading your claims...</span>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.5rem;
+              "
+            >
+              <div>
+                <h2 class="heading-lg">Safety Circle Members</h2>
+                <p class="subtext">
+                  Real-time status updates from connected family & emergency
+                  contacts.
+                </p>
+              </div>
+              <button id="btn-invite-safety" class="btn btn-primary">
+                + Invite
+              </button>
+            </div>
+            <div id="safety-people-list"></div>
+          </div>
+          <div class="dashboard-sidebar" style="padding: 0">
+            <div
+              id="safety-leaflet-map"
+              style="width: 100%; height: 100%; min-height: 400px"
+            ></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. SHELTERS TAB -->
+      <section id="tab-shelters" class="tab-panel">
+        <div class="dashboard-layout shelters-layout-grid">
+          <div class="dashboard-main shelter-map-container" style="padding: 0">
+            <div
+              id="shelters-leaflet-map"
+              style="width: 100%; height: 100%; min-height: calc(100vh - 64px)"
+            ></div>
+          </div>
+          <div class="dashboard-sidebar">
+            <!-- Route Hazard Warning Container -->
+            <div
+              id="shelter-route-warning-banner"
+              class="route-warning-banner"
+              style="display: none"
+            >
+              <span style="font-size: 1.3rem">⚠️</span>
+              <div>
+                <strong>Road Obstruction Warning</strong>
+                <p
+                  id="shelter-route-warning-msg"
+                  style="margin: 0.2rem 0 0.4rem; font-size: 0.82rem"
+                >
+                  Route passes near reported flooded underpass.
+                </p>
+                <div
+                  id="shelter-alternate-suggestion"
+                  style="font-weight: 600; font-size: 0.8rem; color: #1e3a8a"
+                ></div>
+              </div>
+            </div>
+
+            <h3 class="heading-md">Nearby safe shelters</h3>
+            <p class="subtext" style="margin-bottom: 1.5rem">
+              Ranked by proximity & availability · Real-time occupancy
+            </p>
+            <div id="shelters-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. HELPLINE TAB -->
+      <section id="tab-helpline" class="tab-panel">
+        <div style="max-width: 1080px; margin: 2rem auto; padding: 0 1.25rem">
+          <div style="margin-bottom: 2rem">
+            <p class="label-caps" style="color: var(--accent-orange-hover)">
+              EMERGENCY PHONE NUMBERS
+            </p>
+            <h2 class="heading-lg" style="margin-top: 0.25rem">
+              Government Emergency Helplines
+            </h2>
+            <p class="subtext" style="margin-top: 0.25rem">
+              Official 24/7 numbers for flood rescue, medical help, disaster
+              relief, and police. Click any button to copy the number.
+            </p>
+          </div>
+
+          <div class="helpline-grid">
+            <!-- Card 1: NDRF -->
+            <div class="card helpline-card">
+              <div class="helpline-card-header">
+                <div class="helpline-icon">🚁</div>
+                <div>
+                  <span class="badge badge-high" style="margin-bottom: 0.25rem"
+                    >Disaster Rescue</span
+                  >
+                  <h3 style="font-size: 1.1rem; font-weight: 700">
+                    National Disaster Response Force (NDRF)
+                  </h3>
+                </div>
+              </div>
+              <p
+                style="
+                  font-size: 0.85rem;
+                  color: var(--text-secondary);
+                  margin: 0.75rem 0;
+                "
+              >
+                Dedicated flood rescue operations, evacuation, and swift water
+                disaster response teams across India.
+              </p>
+              <div class="helpline-number-box">
+                <span class="helpline-number">011-24363260</span>
+                <span
+                  class="subtext"
+                  style="font-size: 0.75rem; margin-left: auto"
+                  >24/7 Control Room</span
+                >
+              </div>
+              <div class="helpline-btn-group">
+                <button
+                  class="btn btn-secondary btn-sm btn-copy-helpline"
+                  data-number="01124363260"
+                >
+                  📋 Copy Number
+                </button>
+                <a href="tel:01124363260" class="btn btn-primary btn-sm">
+                  📞 Call Now
+                </a>
+              </div>
+            </div>
+
+            <!-- Card 2: National Emergency 112 -->
+            <div
+              class="card helpline-card"
+              style="border-left: 4px solid var(--accent-red)"
+            >
+              <div class="helpline-card-header">
+                <div class="helpline-icon" style="background: #ffebe9">🚨</div>
+                <div>
+                  <span
+                    class="badge badge-critical"
+                    style="margin-bottom: 0.25rem"
+                    >National Toll-Free</span
+                  >
+                  <h3 style="font-size: 1.1rem; font-weight: 700">
+                    National Emergency Number
+                  </h3>
+                </div>
+              </div>
+              <p
+                style="
+                  font-size: 0.85rem;
+                  color: var(--text-secondary);
+                  margin: 0.75rem 0;
+                "
+              >
+                Single unified emergency response number for Police, Fire,
+                Ambulance & Disaster Services nationwide.
+              </p>
+              <div class="helpline-number-box">
+                <span
+                  class="helpline-number"
+                  style="color: var(--accent-red); font-size: 1.5rem"
+                  >112</span
+                >
+                <span
+                  class="subtext"
+                  style="font-size: 0.75rem; margin-left: auto"
+                  >Toll-Free · 24x7</span
+                >
+              </div>
+              <div class="helpline-btn-group">
+                <button
+                  class="btn btn-secondary btn-sm btn-copy-helpline"
+                  data-number="112"
+                >
+                  📋 Copy Number
+                </button>
+                <a href="tel:112" class="btn btn-danger btn-sm">
+                  🚨 Call 112
+                </a>
+              </div>
+            </div>
+
+            <!-- Card 3: SDMA -->
+            <div class="card helpline-card">
+              <div class="helpline-card-header">
+                <div class="helpline-icon">🏛️</div>
+                <div>
+                  <span class="badge badge-live" style="margin-bottom: 0.25rem"
+                    >State Govt Authority</span
+                  >
+                  <h3 style="font-size: 1.1rem; font-weight: 700">
+                    State Disaster Management (SDMA)
+                  </h3>
+                </div>
+              </div>
+              <p
+                style="
+                  font-size: 0.85rem;
+                  color: var(--text-secondary);
+                  margin: 0.75rem 0;
+                "
+              >
+                State emergency operation center for regional flood warnings,
+                relief camps, and emergency supplies dispatch.
+              </p>
+              <div class="helpline-number-box">
+                <span class="helpline-number">1078</span>
+                <span
+                  class="subtext"
+                  style="font-size: 0.75rem; margin-left: auto"
+                  >State Control Room</span
+                >
+              </div>
+              <div class="helpline-btn-group">
+                <button
+                  class="btn btn-secondary btn-sm btn-copy-helpline"
+                  data-number="1078"
+                >
+                  📋 Copy Number
+                </button>
+                <a href="tel:1078" class="btn btn-primary btn-sm">
+                  📞 Call Now
+                </a>
+              </div>
+            </div>
+
+            <!-- Card 4: Flood Control Room -->
+            <div class="card helpline-card">
+              <div class="helpline-card-header">
+                <div class="helpline-icon">🌊</div>
+                <div>
+                  <span class="badge badge-high" style="margin-bottom: 0.25rem"
+                    >Flood Advisory</span
+                  >
+                  <h3 style="font-size: 1.1rem; font-weight: 700">
+                    District Flood Control Helpline
+                  </h3>
+                </div>
+              </div>
+              <p
+                style="
+                  font-size: 0.85rem;
+                  color: var(--text-secondary);
+                  margin: 0.75rem 0;
+                "
+              >
+                Real-time river level updates, embankment breach reporting, and
+                local community evacuation assistance.
+              </p>
+              <div class="helpline-number-box">
+                <span class="helpline-number">1070</span>
+                <span
+                  class="subtext"
+                  style="font-size: 0.75rem; margin-left: auto"
+                  >Toll-Free Control Room</span
+                >
+              </div>
+              <div class="helpline-btn-group">
+                <button
+                  class="btn btn-secondary btn-sm btn-copy-helpline"
+                  data-number="1070"
+                >
+                  📋 Copy Number
+                </button>
+                <a href="tel:1070" class="btn btn-primary btn-sm">
+                  📞 Call Now
+                </a>
+              </div>
+            </div>
+
+            <!-- Card 5: Medical Ambulance -->
+            <div class="card helpline-card">
+              <div class="helpline-card-header">
+                <div class="helpline-icon" style="background: #e8f5e9">🚑</div>
+                <div>
+                  <span class="badge badge-live" style="margin-bottom: 0.25rem"
+                    >Medical Emergency</span
+                  >
+                  <h3 style="font-size: 1.1rem; font-weight: 700">
+                    National Health & Ambulance Service
+                  </h3>
+                </div>
+              </div>
+              <p
+                style="
+                  font-size: 0.85rem;
+                  color: var(--text-secondary);
+                  margin: 0.75rem 0;
+                "
+              >
+                Emergency medical transport, trauma care, and boat-ambulance
+                dispatch in flooded submergence zones.
+              </p>
+              <div class="helpline-number-box">
+                <span class="helpline-number">108</span>
+                <span
+                  class="subtext"
+                  style="font-size: 0.75rem; margin-left: auto"
+                  >24/7 Ambulance</span
+                >
+              </div>
+              <div class="helpline-btn-group">
+                <button
+                  class="btn btn-secondary btn-sm btn-copy-helpline"
+                  data-number="108"
+                >
+                  📋 Copy Number
+                </button>
+                <a href="tel:108" class="btn btn-primary btn-sm">
+                  📞 Call 108
+                </a>
+              </div>
+            </div>
+
+            <!-- Card 6: Police Assistance -->
+            <div class="card helpline-card">
+              <div class="helpline-card-header">
+                <div class="helpline-icon" style="background: #ebf3fe">🛡️</div>
+                <div>
+                  <span class="badge badge-live" style="margin-bottom: 0.25rem"
+                    >Security & Law</span
+                  >
+                  <h3 style="font-size: 1.1rem; font-weight: 700">
+                    Police & Security Helpline
+                  </h3>
+                </div>
+              </div>
+              <p
+                style="
+                  font-size: 0.85rem;
+                  color: var(--text-secondary);
+                  margin: 0.75rem 0;
+                "
+              >
+                Immediate security deployment, law enforcement during
+                evacuations, and missing person search assistance.
+              </p>
+              <div class="helpline-number-box">
+                <span class="helpline-number">100</span>
+                <span
+                  class="subtext"
+                  style="font-size: 0.75rem; margin-left: auto"
+                  >Police Control</span
+                >
+              </div>
+              <div class="helpline-btn-group">
+                <button
+                  class="btn btn-secondary btn-sm btn-copy-helpline"
+                  data-number="100"
+                >
+                  📋 Copy Number
+                </button>
+                <a href="tel:100" class="btn btn-primary btn-sm">
+                  📞 Call 100
+                </a>
+              </div>
+            </div>
+
+            <!-- Card 7: Fire & Rescue -->
+            <div class="card helpline-card">
+              <div class="helpline-card-header">
+                <div class="helpline-icon" style="background: #fff3e0">🚒</div>
+                <div>
+                  <span class="badge badge-high" style="margin-bottom: 0.25rem"
+                    >Rescue Ops</span
+                  >
+                  <h3 style="font-size: 1.1rem; font-weight: 700">
+                    Fire & Disaster Rescue Services
+                  </h3>
+                </div>
+              </div>
+              <p
+                style="
+                  font-size: 0.85rem;
+                  color: var(--text-secondary);
+                  margin: 0.75rem 0;
+                "
+              >
+                Heavy rescue gear, and water pumping assistance during heavy
+                inundation.
+              </p>
+              <div class="helpline-number-box">
+                <span class="helpline-number">101</span>
+                <span
+                  class="subtext"
+                  style="font-size: 0.75rem; margin-left: auto"
+                  >Fire Station Desk</span
+                >
+              </div>
+              <div class="helpline-btn-group">
+                <button
+                  class="btn btn-secondary btn-sm btn-copy-helpline"
+                  data-number="101"
+                >
+                  📋 Copy Number
+                </button>
+                <a href="tel:101" class="btn btn-primary btn-sm">
+                  📞 Call 101
+                </a>
+              </div>
+            </div>
+
+            <!-- Card 8: Red Cross Relief -->
+            <div class="card helpline-card">
+              <div class="helpline-card-header">
+                <div class="helpline-icon" style="background: #ffebee">❤️</div>
+                <div>
+                  <span class="badge badge-live" style="margin-bottom: 0.25rem"
+                    >Humanitarian Aid</span
+                  >
+                  <h3 style="font-size: 1.1rem; font-weight: 700">
+                    Indian Red Cross Disaster Relief
+                  </h3>
+                </div>
+              </div>
+              <p
+                style="
+                  font-size: 0.85rem;
+                  color: var(--text-secondary);
+                  margin: 0.75rem 0;
+                "
+              >
+                Emergency medical kits, clean drinking water distribution, food
+                ration packs, and temporary shelter kits.
+              </p>
+              <div class="helpline-number-box">
+                <span class="helpline-number">011-23716441</span>
+                <span
+                  class="subtext"
+                  style="font-size: 0.75rem; margin-left: auto"
+                  >Relief Headquarters</span
+                >
+              </div>
+              <div class="helpline-btn-group">
+                <button
+                  class="btn btn-secondary btn-sm btn-copy-helpline"
+                  data-number="01123716441"
+                >
+                  📋 Copy Number
+                </button>
+                <a href="tel:01123716441" class="btn btn-primary btn-sm">
+                  📞 Call Now
+                </a>
               </div>
             </div>
           </div>
         </div>
+      </section>
 
-      </div>
-    </section>
+      <!-- 7. RECOVERY, FIRST AID-->
+      <section id="tab-recovery" class="tab-panel">
+        <div style="max-width: 1100px; margin: 1.5rem auto; padding: 0 1rem">
+          <!-- Tab Header -->
+          <div style="margin-bottom: 2rem">
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                margin-bottom: 0.25rem;
+              "
+            >
+              <span
+                class="badge badge-critical"
+                style="font-weight: 700; letter-spacing: 0.5px"
+                >MEDICAL & RECOVERY</span
+              >
+              <span class="subtext">Offline-ready survival protocols</span>
+            </div>
+            <h1 class="heading-lg" style="margin: 0.2rem 0">
+              Post-Flood Recovery, First Aid & Survival Guide
+            </h1>
+            <p class="subtext" style="font-size: 0.95rem">
+              Essential emergency procedures, snake bite response, water
+              decontamination, wound care, and government relief compensation.
+            </p>
+          </div>
 
-  </main>
+          <!-- 1. SNAKE BITE EMERGENCY PROTOCOL (TOP CRITICAL SECTION) -->
+          <div
+            class="card"
+            style="
+              margin-bottom: 2rem;
+              border: 2px solid #dc2626;
+              background: #fff;
+              box-shadow: 0 4px 20px rgba(220, 38, 38, 0.1);
+              border-radius: 12px;
+              overflow: hidden;
+              padding: 0;
+            "
+          >
+            <!-- Banner Header -->
+            <div
+              style="
+                background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+                color: #fff;
+                padding: 1.25rem 1.5rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 0.75rem;
+              "
+            >
+              <div style="display: flex; align-items: center; gap: 0.75rem">
+                <span style="font-size: 2.2rem; line-height: 1">🐍</span>
+                <div>
+                  <span
+                    class="badge"
+                    style="
+                      background: #fef2f2;
+                      color: #dc2626;
+                      font-weight: 800;
+                      font-size: 0.75rem;
+                      letter-spacing: 0.5px;
+                      margin-bottom: 0.2rem;
+                    "
+                    >CRITICAL FLOOD HAZARD</span
+                  >
+                  <h2
+                    style="
+                      font-size: 1.3rem;
+                      font-weight: 800;
+                      color: #fff;
+                      margin: 0;
+                    "
+                  >
+                    Snake Bite Emergency Management Protocol
+                  </h2>
+                </div>
+              </div>
+              <a
+                href="tel:108"
+                class="btn"
+                style="
+                  background: #fff;
+                  color: #dc2626;
+                  font-weight: 800;
+                  text-decoration: none;
+                  padding: 0.5rem 1rem;
+                  border-radius: 6px;
+                "
+              >
+                🚨 Call Ambulance 108
+              </a>
+            </div>
 
-  <!-- Mobile Nav Overlay & Menu -->
-  <div id="mobile-nav-overlay" class="mobile-nav-overlay"></div>
-  <nav id="mobile-nav-menu" class="mobile-nav-menu">
-    <a href="#overview" class="nav-tab active" data-tab="overview">📊 Overview</a>
-    <a href="#map" class="nav-tab" data-tab="map">🗺️ Map</a>
-    <a href="#alerts" class="nav-tab" data-tab="alerts">🔔 Alerts <span id="mobile-nav-alerts-badge" class="badge badge-critical" style="padding: 2px 6px; font-size: 0.7rem; display: none;"></span></a>
-    <a href="#emergency" class="nav-tab" data-tab="emergency">🚨 Emergency</a>
-    <a href="#safety" class="nav-tab" data-tab="safety">🛡️ Safety</a>
-    <a href="#shelters" class="nav-tab" data-tab="shelters">🏠 Shelters</a>
-    <a href="#recovery" class="nav-tab" data-tab="recovery">📑 Recovery & First Aid</a>
-    <a href="#helpline" class="nav-tab" data-tab="helpline">📞 Helpline</a>
-    <hr style="border: none; border-top: 1px solid var(--border); margin: 0.5rem 0;">
-    <a href="profile.html" style="padding: 0.75rem 1rem; font-size: 1rem; font-weight: 500;">👤 Profile & Logout</a>
-  </nav>
+            <!-- Snake Bite Content Body -->
+            <div style="padding: 1.5rem">
+              <p
+                style="
+                  font-size: 0.92rem;
+                  color: #374151;
+                  line-height: 1.6;
+                  margin-bottom: 1.25rem;
+                "
+              >
+                <strong>Why Snake Bites Surge After Floods:</strong> Floodwaters
+                submerge ground burrows, driving snakes (Cobras, Russell's
+                Vipers, Kraits) to take refuge in dry huts, rooftops, furniture,
+                bedding, and tree branches.
+                <em
+                  >Anti-Snake Venom (ASV) administered in a hospital is the ONLY
+                  cure.</em
+                >
+              </p>
 
-  <!-- Mobile Bottom Tab Navigation Bar (For Native Mobile App Feel & Live Demonstration) -->
-  <nav id="mobile-bottom-bar" class="mobile-bottom-bar">
-    <a href="#overview" class="bottom-nav-item active nav-tab" data-tab="overview">
-      <span class="nav-icon">📊</span>
-      <span class="nav-label">Overview</span>
-    </a>
-    <a href="#map" class="bottom-nav-item nav-tab" data-tab="map">
-      <span class="nav-icon">🗺️</span>
-      <span class="nav-label">Map</span>
-    </a>
-    <a href="#alerts" class="bottom-nav-item nav-tab" data-tab="alerts">
-      <span class="nav-icon">🔔</span>
-      <span class="nav-label">Alerts</span>
-    </a>
-    <a href="#emergency" class="bottom-nav-item nav-tab" data-tab="emergency">
-      <span class="nav-icon">🚨</span>
-      <span class="nav-label">SOS</span>
-    </a>
-    <a href="#shelters" class="bottom-nav-item nav-tab" data-tab="shelters">
-      <span class="nav-icon">🏠</span>
-      <span class="nav-label">Shelters</span>
-    </a>
-    <a href="#recovery" class="bottom-nav-item nav-tab" data-tab="recovery">
-      <span class="nav-icon">🩹</span>
-      <span class="nav-label">First Aid</span>
-    </a>
-  </nav>
+              <!-- DOs vs DONTs Grid -->
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 1fr 1fr;
+                  gap: 1.25rem;
+                  margin-bottom: 1.5rem;
+                "
+                class="recovery-split-grid"
+              >
+                <!-- DO'S -->
+                <div
+                  style="
+                    background: #f0fdf4;
+                    border: 1px solid #bbf7d0;
+                    border-radius: 8px;
+                    padding: 1.25rem;
+                  "
+                >
+                  <h3
+                    style="
+                      font-size: 1.05rem;
+                      font-weight: 800;
+                      color: #166534;
+                      display: flex;
+                      align-items: center;
+                      gap: 0.5rem;
+                      margin-bottom: 0.75rem;
+                    "
+                  >
+                    <span>✅</span> WHAT TO DO IMMEDIATELY (Do's)
+                  </h3>
+                  <ul
+                    style="
+                      padding-left: 1.2rem;
+                      font-size: 0.88rem;
+                      color: #14532d;
+                      line-height: 1.6;
+                      margin: 0;
+                      display: flex;
+                      flex-direction: column;
+                      gap: 0.5rem;
+                    "
+                  >
+                    <li>
+                      <strong>Keep the victim 100% calm and immobile:</strong>
+                      Any movement, panic, or walking increases heart rate and
+                      speeds up venom dissemination through the lymphatic
+                      system.
+                    </li>
+                    <li>
+                      <strong>Immobilize the bitten limb:</strong> Splint the
+                      arm or leg with a firm stick or rolled cardboard and a
+                      broad, snug bandage. Prevent any joint from bending.
+                    </li>
+                    <li>
+                      <strong>Keep the bite BELOW heart level:</strong> Prevents
+                      rapid venous rush toward vital organs.
+                    </li>
+                    <li>
+                      <strong>Remove tight items immediately:</strong> Rings,
+                      bracelets, watches, anklets, and shoes MUST come off
+                      before swelling becomes severe.
+                    </li>
+                    <li>
+                      <strong>Remember snake appearance (if safe):</strong> Note
+                      color, head shape, and stripe pattern to tell doctors. Do
+                      NOT try to catch or kill the snake.
+                    </li>
+                    <li>
+                      <strong>Transport immediately to hospital:</strong> Keep
+                      patient lying flat on their side (Recovery Position)
+                      during transport.
+                    </li>
+                  </ul>
+                </div>
 
-  <!-- MODALS -->
+                <!-- DONT'S -->
+                <div
+                  style="
+                    background: #fef2f2;
+                    border: 1px solid #fecaca;
+                    border-radius: 8px;
+                    padding: 1.25rem;
+                  "
+                >
+                  <h3
+                    style="
+                      font-size: 1.05rem;
+                      font-weight: 800;
+                      color: #991b1b;
+                      display: flex;
+                      align-items: center;
+                      gap: 0.5rem;
+                      margin-bottom: 0.75rem;
+                    "
+                  >
+                    <span>❌</span> WHAT NEVER TO DO (Deadly Myths)
+                  </h3>
+                  <ul
+                    style="
+                      padding-left: 1.2rem;
+                      font-size: 0.88rem;
+                      color: #7f1d1d;
+                      line-height: 1.6;
+                      margin: 0;
+                      display: flex;
+                      flex-direction: column;
+                      gap: 0.5rem;
+                    "
+                  >
+                    <li>
+                      <strong>DO NOT cut, slash, or make incisions:</strong>
+                      Cutting through bite punctures damages nerves, causes
+                      uncontrollable arterial bleeding, and worsens infection.
+                    </li>
+                    <li>
+                      <strong>DO NOT suck venom with mouth or pump:</strong>
+                      Venom is absorbed deep in tissue within seconds. Mouth
+                      contact can poison the rescuer.
+                    </li>
+                    <li>
+                      <strong>DO NOT apply tight tourniquets or ropes:</strong>
+                      Cutting off arterial blood flow causes severe localized
+                      tissue death (gangrene) and limb amputation.
+                    </li>
+                    <li>
+                      <strong
+                        >DO NOT apply ice, electricity, or chemicals:</strong
+                      >
+                      Ice causes severe frostbite necrosis; electric shocks can
+                      cause cardiac arrest.
+                    </li>
+                    <li>
+                      <strong>DO NOT visit faith healers (Jhad-phook):</strong>
+                      Wastes the "Golden Hour" (first 60–90 mins) when
+                      Anti-Snake Venom is most effective.
+                    </li>
+                    <li>
+                      <strong
+                        >DO NOT give aspirin, pain pills, or alcohol:</strong
+                      >
+                      Aspirin thins blood and increases internal bleeding from
+                      viper bites.
+                    </li>
+                  </ul>
+                </div>
+              </div>
 
-  <!-- 1. Location Selection Modal -->
-  <div id="location-modal" class="modal-backdrop">
-    <div class="modal-content">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <h3 class="heading-md">Select Monitoring Location</h3>
-        <button id="close-location-modal" style="font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
-      </div>
-      
-      <div class="form-group" style="position: relative;">
-        <input type="text" id="modal-search-input" class="form-input" placeholder="Search city, area or pincode (e.g. Hazratganj)...">
-        <div id="modal-search-results" class="card" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 10; margin-top: 4px; padding: 0.5rem 0; max-height: 200px; overflow-y: auto;"></div>
-      </div>
+              <!-- Anti-venom contact strip -->
+              <div
+                style="
+                  background: #f8fafc;
+                  border: 1px solid #e2e8f0;
+                  border-radius: 8px;
+                  padding: 1rem;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  flex-wrap: wrap;
+                  gap: 1rem;
+                "
+              >
+                <div>
+                  <strong style="font-size: 0.9rem; color: #1e293b"
+                    >Nearest Anti-Venom Equipped Hospitals (Lucknow / UP
+                    Region):</strong
+                  >
+                  <p
+                    class="subtext"
+                    style="font-size: 0.82rem; margin: 0.2rem 0 0"
+                  >
+                    Polyvalent anti-venom available 24x7 in Emergency Casualty
+                    Desks.
+                  </p>
+                </div>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap">
+                  <a
+                    href="tel:05222257540"
+                    class="btn btn-secondary btn-sm"
+                    style="font-weight: 700; color: #dc2626"
+                    >🏥 KGMU Trauma: 0522-2257540</a
+                  >
+                  <a
+                    href="tel:05222224011"
+                    class="btn btn-secondary btn-sm"
+                    style="font-weight: 700; color: #dc2626"
+                    >🏥 Balrampur Civil: 0522-2224011</a
+                  >
+                  <a
+                    href="tel:108"
+                    class="btn btn-primary btn-sm"
+                    style="background: #dc2626; border-color: #dc2626"
+                    >🚨 Ambulance 108</a
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
 
-      <button id="modal-gps-btn" class="btn btn-secondary btn-full" style="margin-bottom: 1.5rem;">
-        ⊕ Use my current GPS location
-      </button>
+          <!-- 2. MEDICAL & SURVIVAL PROTOCOLS GRID -->
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+              gap: 1.5rem;
+              margin-bottom: 2rem;
+            "
+          >
+            <!-- Card A: Contaminated Wound Care & Tetanus -->
+            <div class="card" style="border-top: 4px solid #2563eb">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 0.75rem;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                <span style="font-size: 1.8rem">🩹</span>
+                <div>
+                  <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0">
+                    Flood Wound Care & Tetanus
+                  </h3>
+                  <span class="subtext" style="font-size: 0.76rem"
+                    >Infection & Leptospirosis Control</span
+                  >
+                </div>
+              </div>
+              <p
+                style="
+                  font-size: 0.86rem;
+                  color: var(--text-secondary);
+                  line-height: 1.5;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                Floodwater contains raw sewage, soil bacteria, and leptospira
+                organisms from rodent urine. Open cuts exposed to floodwaters
+                carry life-threatening infection risks.
+              </p>
+              <div
+                style="
+                  background: var(--bg-card-muted);
+                  padding: 0.75rem 1rem;
+                  border-radius: 6px;
+                  font-size: 0.82rem;
+                  line-height: 1.6;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                <strong>Step-by-step cleaning:</strong><br />
+                1. Flush wound thoroughly with clean boiled/bottled water and
+                soap.<br />
+                2. Apply Povidone-Iodine (Betadine 10%) or chlorhexidine
+                antiseptic.<br />
+                3. Cover with sterile gauze; keep elevated and dry.<br />
+                4. <strong>Tetanus Toxoid (TT) Warning:</strong> If wound was
+                caused by rusty metal, submerged tin, or nails, get a TT
+                injection within <strong>48 hours</strong>.
+              </div>
+              <div style="font-size: 0.8rem; color: #1d4ed8; font-weight: 600">
+                ⚠️ Watch for "Rat Fever" (Leptospirosis): High fever, yellowing
+                eyes (jaundice), red eyes, and severe calf muscle pain.
+              </div>
+            </div>
 
-      <p class="label-caps" style="margin-bottom: 0.5rem;">QUICK LOCATIONS</p>
-      <div class="card" style="padding: 0; max-height: 220px; overflow-y: auto;">
-        <div class="modal-quick-loc" data-name="Lucknow, Uttar Pradesh" data-lat="26.8467" data-lng="80.9462" style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer;">📍 Lucknow, Uttar Pradesh</div>
-        <div class="modal-quick-loc" data-name="Guwahati, Assam" data-lat="26.1445" data-lng="91.7362" style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer;">📍 Guwahati, Assam</div>
-        <div class="modal-quick-loc" data-name="Silchar, Assam" data-lat="24.8333" data-lng="92.7789" style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer;">📍 Silchar, Assam</div>
-        <div class="modal-quick-loc" data-name="New Delhi, Delhi" data-lat="28.6139" data-lng="77.2090" style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer;">📍 New Delhi</div>
-        <div class="modal-quick-loc" data-name="Mumbai, Maharashtra" data-lat="19.0760" data-lng="72.8777" style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer;">📍 Mumbai, Maharashtra</div>
-        <div class="modal-quick-loc" data-name="Kolkata, West Bengal" data-lat="22.5726" data-lng="88.3639" style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer;">📍 Kolkata, West Bengal</div>
-        <div class="modal-quick-loc" data-name="Patna, Bihar" data-lat="25.5941" data-lng="85.1376" style="padding: 0.75rem 1rem; cursor: pointer;">📍 Patna, Bihar</div>
+            <!-- Card B: Drowning Resuscitation & CPR -->
+            <div class="card" style="border-top: 4px solid #ef4444">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 0.75rem;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                <span style="font-size: 1.8rem">🫀</span>
+                <div>
+                  <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0">
+                    Drowning Resuscitation & CPR
+                  </h3>
+                  <span class="subtext" style="font-size: 0.76rem"
+                    >Emergency Airway Revival</span
+                  >
+                </div>
+              </div>
+              <p
+                style="
+                  font-size: 0.86rem;
+                  color: var(--text-secondary);
+                  line-height: 1.5;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                When a person is pulled unconscious from floodwater, brain
+                survival depends on immediate oxygenation within 3–4 minutes.
+              </p>
+              <div
+                style="
+                  background: var(--bg-card-muted);
+                  padding: 0.75rem 1rem;
+                  border-radius: 6px;
+                  font-size: 0.82rem;
+                  line-height: 1.6;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                <strong>CPR Protocol:</strong><br />
+                1. <strong>Check responsiveness:</strong> Tap shoulders and
+                shout. Check breathing for 10 seconds.<br />
+                2. <strong>Hands-Only CPR:</strong> Place hands in center of
+                victim's chest. Press hard and fast (100–120 compressions/min, 2
+                inches deep).<br />
+                3. <strong>If trained in breaths:</strong> Give 30 compressions
+                followed by 2 gentle rescue breaths (head tilt, chin lift).<br />
+                4. <strong>Recovery Position:</strong> If breathing resumes,
+                turn victim onto their side with upper knee bent to prevent
+                choking on vomited water.
+              </div>
+              <div style="font-size: 0.8rem; color: #dc2626; font-weight: 600">
+                🚨 Never attempt to drain water from the stomach with abdominal
+                thrusts—it causes regurgitation into lungs.
+              </div>
+            </div>
+
+            <!-- Card C: Water Purification & DIY ORS -->
+            <div class="card" style="border-top: 4px solid #059669">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 0.75rem;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                <span style="font-size: 1.8rem">💧</span>
+                <div>
+                  <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0">
+                    Safe Drinking Water & DIY ORS
+                  </h3>
+                  <span class="subtext" style="font-size: 0.76rem"
+                    >Prevent Cholera, Typhoid & Dehydration</span
+                  >
+                </div>
+              </div>
+              <p
+                style="
+                  font-size: 0.86rem;
+                  color: var(--text-secondary);
+                  line-height: 1.5;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                Municipal pipes and groundwater wells become heavily
+                contaminated during floods. Never drink unfiltered or unboiled
+                tap water.
+              </p>
+              <div
+                style="
+                  background: var(--bg-card-muted);
+                  padding: 0.75rem 1rem;
+                  border-radius: 6px;
+                  font-size: 0.82rem;
+                  line-height: 1.6;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                <strong>3 Purification Methods:</strong><br />
+                • <strong>Vigorous Boiling:</strong> Rolling boil for at least
+                1–3 minutes.<br />
+                • <strong>Halazone/Chlorine Tablets:</strong> 1 tablet per 20
+                Liters of clear water. Wait 30 minutes before drinking.<br />
+                • <strong>Liquid Chlorine (5%):</strong> 2 drops per Liter of
+                clear water.<br />
+                <strong>Life-Saving DIY ORS Formula:</strong><br />
+                Mix <strong>1 Litre boiled water</strong> +
+                <strong>6 teaspoons sugar</strong> +
+                <strong>1/2 teaspoon salt</strong>. Administer frequently for
+                diarrhea/vomiting.
+              </div>
+              <div style="font-size: 0.8rem; color: #059669; font-weight: 600">
+                ✓ Safe storage: Store treated water in narrow-mouth, covered
+                containers to prevent recontamination.
+              </div>
+            </div>
+
+            <!-- Card D: Trench Foot & Fungal Infection -->
+            <div class="card" style="border-top: 4px solid #d97706">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 0.75rem;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                <span style="font-size: 1.8rem">🦶</span>
+                <div>
+                  <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0">
+                    Trench Foot & Fungal Skin Care
+                  </h3>
+                  <span class="subtext" style="font-size: 0.76rem"
+                    >Prolonged Wet Foot Management</span
+                  >
+                </div>
+              </div>
+              <p
+                style="
+                  font-size: 0.86rem;
+                  color: var(--text-secondary);
+                  line-height: 1.5;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                Standing in wet footwear or damp mud for more than 10–12 hours
+                constricts blood vessels, destroying nerve endings and skin
+                tissue (Immersion Foot).
+              </p>
+              <div
+                style="
+                  background: var(--bg-card-muted);
+                  padding: 0.75rem 1rem;
+                  border-radius: 6px;
+                  font-size: 0.82rem;
+                  line-height: 1.6;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                <strong>Prevention Guidelines:</strong><br />
+                • Remove wet shoes and socks as soon as reaching dry shelter.<br />
+                • Wash feet with clean water and mild soap; dry thoroughly
+                between toes.<br />
+                • Elevate feet above heart level for 30 minutes to restore
+                circulation.<br />
+                • Apply antifungal powder (Clotrimazole) or coconut oil to
+                prevent skin cracking.<br />
+                • <strong>Warning signs:</strong> Cold, numb, white, or blotchy
+                blue skin requires urgent medical evaluation.
+              </div>
+            </div>
+
+            <!-- Card E: Electrical & LPG Gas Safety -->
+            <div class="card" style="border-top: 4px solid #7c3aed">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 0.75rem;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                <span style="font-size: 1.8rem">⚡</span>
+                <div>
+                  <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0">
+                    Electrical & Gas Re-Entry Safety
+                  </h3>
+                  <span class="subtext" style="font-size: 0.76rem"
+                    >Prevent Electrocution & Explosions</span
+                  >
+                </div>
+              </div>
+              <p
+                style="
+                  font-size: 0.86rem;
+                  color: var(--text-secondary);
+                  line-height: 1.5;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                Submerged electrical wiring and dislodged LPG gas cylinders
+                cause fatal accidents when floodwaters recede.
+              </p>
+              <div
+                style="
+                  background: var(--bg-card-muted);
+                  padding: 0.75rem 1rem;
+                  border-radius: 6px;
+                  font-size: 0.82rem;
+                  line-height: 1.6;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                <strong>Re-entry Precautions:</strong><br />
+                •
+                <strong>Never step in water near outlets or appliances:</strong>
+                Water conducts current even from partially submerged sockets.<br />
+                • <strong>Switch off main circuit breaker</strong> only if the
+                fuse box and your standing area are completely dry.<br />
+                • <strong>Smell for gas (LPG):</strong> If you smell rotten
+                eggs/sulfur, DO NOT turn on any light switch, match, or lighter.
+                Evacuate immediately.<br />
+                • <strong>Do not use flooded electronics:</strong> Motors,
+                inverters, and refrigerators must be dried and certified by a
+                technician before power-on.
+              </div>
+            </div>
+
+            <!-- Card F: Structural Collapse Safety -->
+            <div class="card" style="border-top: 4px solid #4b5563">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 0.75rem;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                <span style="font-size: 1.8rem">🏚️</span>
+                <div>
+                  <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0">
+                    Building & Structural Inspection
+                  </h3>
+                  <span class="subtext" style="font-size: 0.76rem"
+                    >Avoid Ceiling Collapses & Sinkholes</span
+                  >
+                </div>
+              </div>
+              <p
+                style="
+                  font-size: 0.86rem;
+                  color: var(--text-secondary);
+                  line-height: 1.5;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                Receding floodwaters erode foundation soil, causing unexpected
+                wall collapses and sinkholes.
+              </p>
+              <div
+                style="
+                  background: var(--bg-card-muted);
+                  padding: 0.75rem 1rem;
+                  border-radius: 6px;
+                  font-size: 0.82rem;
+                  line-height: 1.6;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                <strong>Checklist Before Re-Entering Home:</strong><br />
+                • Look for horizontal or diagonal cracks in exterior walls.<br />
+                • Check if roof or ceiling is sagging under absorbed water
+                weight.<br />
+                • Tap on floor tiles to verify soil beneath hasn't washed
+                away.<br />
+                • Avoid leaning against boundary walls or waterlogged brick
+                structures.<br />
+                • Discard all contaminated mattresses, pillows, and soaked
+                upholstered furniture to stop black mold spores.
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. OFFICIAL DISASTER RELIEF DAMAGE CLAIMS MODULE -->
+          <div
+            style="
+              margin-top: 2.5rem;
+              border-top: 2px dashed var(--border);
+              padding-top: 2rem;
+            "
+          >
+            <div style="margin-bottom: 1.5rem">
+              <span class="label-caps" style="color: var(--primary)"
+                >GOVERNMENT RELIEF & REHABILITATION</span
+              >
+              <h2 class="heading-lg" style="margin: 0.2rem 0">
+                File Flood Damage Assessment Claim
+              </h2>
+              <p class="subtext">
+                Submit verified documentation of damages to residential
+                property, crops, vehicles, or livestock for official SDRF/NDRF
+                relief compensation.
+              </p>
+            </div>
+
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem"
+              class="recovery-split-grid"
+            >
+              <!-- Damage Claim Form -->
+              <div class="card">
+                <h3 class="heading-md" style="margin-bottom: 0.25rem">
+                  New Damage Claim
+                </h3>
+                <p class="subtext" style="margin-bottom: 1.25rem">
+                  Complete details and attach photos for expedited inspection.
+                </p>
+
+                <form id="damage-report-form">
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 1fr 1fr;
+                      gap: 0.75rem;
+                      margin-bottom: 0.75rem;
+                    "
+                  >
+                    <div>
+                      <label class="label-caps">CATEGORY</label>
+                      <select id="dmg-category" class="input" required>
+                        <option value="house">Residential House</option>
+                        <option value="crop">Agricultural Crop</option>
+                        <option value="vehicle">Vehicle / Motor</option>
+                        <option value="livestock">Livestock / Cattle</option>
+                        <option value="infrastructure">
+                          Commercial / Shop
+                        </option>
+                        <option value="other">Other Assets</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="label-caps">SEVERITY</label>
+                      <select id="dmg-severity" class="input" required>
+                        <option value="minor">Minor Damage (< 25%)</option>
+                        <option value="moderate">
+                          Moderate Damage (25–50%)
+                        </option>
+                        <option value="severe">Severe Damage (50–75%)</option>
+                        <option value="destroyed">Total Collapse (100%)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 0.75rem">
+                    <label class="label-caps"
+                      >ESTIMATED LOSS IN RUPEES (INR ₹)</label
+                    >
+                    <input
+                      type="number"
+                      id="dmg-loss"
+                      class="input"
+                      placeholder="e.g. 85000"
+                      min="0"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 0.75rem">
+                    <label class="label-caps"
+                      >DESCRIPTION OF LOSS & ASSET DETAILS</label
+                    >
+                    <textarea
+                      id="dmg-description"
+                      class="input"
+                      rows="2"
+                      placeholder="Explain damage to boundary walls, roof, crops, electrical fixtures..."
+                      required
+                    ></textarea>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 1.25rem">
+                    <label class="label-caps">DAMAGE PHOTOS (UP TO 3)</label>
+                    <input
+                      type="file"
+                      id="dmg-photos-input"
+                      accept="image/*"
+                      class="input"
+                      multiple
+                    />
+                  </div>
+
+                  <button type="submit" class="btn btn-primary btn-full">
+                    📑 Submit Claim for Verification
+                  </button>
+                </form>
+              </div>
+
+              <!-- My Claims History -->
+              <div class="card">
+                <h3 class="heading-md" style="margin-bottom: 0.25rem">
+                  My Submitted Claims
+                </h3>
+                <p class="subtext" style="margin-bottom: 1.25rem">
+                  Track relief assessment verification status.
+                </p>
+                <div
+                  id="my-damage-claims-list"
+                  style="display: flex; flex-direction: column; gap: 0.75rem"
+                >
+                  <span class="subtext">Loading your claims...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Mobile Nav Overlay & Menu -->
+    <div id="mobile-nav-overlay" class="mobile-nav-overlay"></div>
+    <nav id="mobile-nav-menu" class="mobile-nav-menu">
+      <a href="#overview" class="nav-tab active" data-tab="overview"
+        >📊 Overview</a
+      >
+      <a href="#map" class="nav-tab" data-tab="map">🗺️ Map</a>
+      <a href="#alerts" class="nav-tab" data-tab="alerts"
+        >🔔 Alerts
+        <span
+          id="mobile-nav-alerts-badge"
+          class="badge badge-critical"
+          style="padding: 2px 6px; font-size: 0.7rem; display: none"
+        ></span
+      ></a>
+      <a href="#emergency" class="nav-tab" data-tab="emergency">🚨 Emergency</a>
+      <a href="#safety" class="nav-tab" data-tab="safety">🛡️ Safety</a>
+      <a href="#shelters" class="nav-tab" data-tab="shelters">🏠 Shelters</a>
+      <a href="#recovery" class="nav-tab" data-tab="recovery"
+        >📑 Recovery & First Aid</a
+      >
+      <a href="#helpline" class="nav-tab" data-tab="helpline">📞 Helpline</a>
+      <hr
+        style="
+          border: none;
+          border-top: 1px solid var(--border);
+          margin: 0.5rem 0;
+        "
+      />
+      <a
+        href="profile.html"
+        style="padding: 0.75rem 1rem; font-size: 1rem; font-weight: 500"
+        >👤 Profile & Logout</a
+      >
+    </nav>
+
+    <!-- Mobile Bottom Tab Navigation Bar (For Native Mobile App Feel & Live Demonstration) -->
+    <nav id="mobile-bottom-bar" class="mobile-bottom-bar">
+      <a
+        href="#overview"
+        class="bottom-nav-item active nav-tab"
+        data-tab="overview"
+      >
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Overview</span>
+      </a>
+      <a href="#map" class="bottom-nav-item nav-tab" data-tab="map">
+        <span class="nav-icon">🗺️</span>
+        <span class="nav-label">Map</span>
+      </a>
+      <a href="#alerts" class="bottom-nav-item nav-tab" data-tab="alerts">
+        <span class="nav-icon">🔔</span>
+        <span class="nav-label">Alerts</span>
+      </a>
+      <a href="#emergency" class="bottom-nav-item nav-tab" data-tab="emergency">
+        <span class="nav-icon">🚨</span>
+        <span class="nav-label">SOS</span>
+      </a>
+      <a href="#shelters" class="bottom-nav-item nav-tab" data-tab="shelters">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Shelters</span>
+      </a>
+      <a href="#recovery" class="bottom-nav-item nav-tab" data-tab="recovery">
+        <span class="nav-icon">🩹</span>
+        <span class="nav-label">First Aid</span>
+      </a>
+    </nav>
+
+    <!-- MODALS -->
+
+    <!-- 1. Location Selection Modal -->
+    <div id="location-modal" class="modal-backdrop">
+      <div class="modal-content">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+          "
+        >
+          <h3 class="heading-md">Select Monitoring Location</h3>
+          <button
+            id="close-location-modal"
+            style="font-size: 1.5rem; cursor: pointer; color: var(--text-muted)"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div class="form-group" style="position: relative">
+          <input
+            type="text"
+            id="modal-search-input"
+            class="form-input"
+            placeholder="Search city, area or pincode (e.g. Hazratganj)..."
+          />
+          <div
+            id="modal-search-results"
+            class="card"
+            style="
+              display: none;
+              position: absolute;
+              top: 100%;
+              left: 0;
+              right: 0;
+              z-index: 10;
+              margin-top: 4px;
+              padding: 0.5rem 0;
+              max-height: 200px;
+              overflow-y: auto;
+            "
+          ></div>
+        </div>
+
+        <button
+          id="modal-gps-btn"
+          class="btn btn-secondary btn-full"
+          style="margin-bottom: 1.5rem"
+        >
+          ⊕ Use my current GPS location
+        </button>
+
+        <p class="label-caps" style="margin-bottom: 0.5rem">QUICK LOCATIONS</p>
+        <div
+          class="card"
+          style="padding: 0; max-height: 220px; overflow-y: auto"
+        >
+          <div
+            class="modal-quick-loc"
+            data-name="Lucknow, Uttar Pradesh"
+            data-lat="26.8467"
+            data-lng="80.9462"
+            style="
+              padding: 0.75rem 1rem;
+              border-bottom: 1px solid var(--border);
+              cursor: pointer;
+            "
+          >
+            📍 Lucknow, Uttar Pradesh
+          </div>
+          <div
+            class="modal-quick-loc"
+            data-name="Guwahati, Assam"
+            data-lat="26.1445"
+            data-lng="91.7362"
+            style="
+              padding: 0.75rem 1rem;
+              border-bottom: 1px solid var(--border);
+              cursor: pointer;
+            "
+          >
+            📍 Guwahati, Assam
+          </div>
+          <div
+            class="modal-quick-loc"
+            data-name="Silchar, Assam"
+            data-lat="24.8333"
+            data-lng="92.7789"
+            style="
+              padding: 0.75rem 1rem;
+              border-bottom: 1px solid var(--border);
+              cursor: pointer;
+            "
+          >
+            📍 Silchar, Assam
+          </div>
+          <div
+            class="modal-quick-loc"
+            data-name="New Delhi, Delhi"
+            data-lat="28.6139"
+            data-lng="77.2090"
+            style="
+              padding: 0.75rem 1rem;
+              border-bottom: 1px solid var(--border);
+              cursor: pointer;
+            "
+          >
+            📍 New Delhi
+          </div>
+          <div
+            class="modal-quick-loc"
+            data-name="Mumbai, Maharashtra"
+            data-lat="19.0760"
+            data-lng="72.8777"
+            style="
+              padding: 0.75rem 1rem;
+              border-bottom: 1px solid var(--border);
+              cursor: pointer;
+            "
+          >
+            📍 Mumbai, Maharashtra
+          </div>
+          <div
+            class="modal-quick-loc"
+            data-name="Kolkata, West Bengal"
+            data-lat="22.5726"
+            data-lng="88.3639"
+            style="
+              padding: 0.75rem 1rem;
+              border-bottom: 1px solid var(--border);
+              cursor: pointer;
+            "
+          >
+            📍 Kolkata, West Bengal
+          </div>
+          <div
+            class="modal-quick-loc"
+            data-name="Patna, Bihar"
+            data-lat="25.5941"
+            data-lng="85.1376"
+            style="padding: 0.75rem 1rem; cursor: pointer"
+          >
+            📍 Patna, Bihar
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- 2. Add / Edit Contact Modal -->
-  <div id="add-contact-modal" class="modal-backdrop">
-    <div class="modal-content">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <h3 class="heading-md" id="contact-modal-title">Add Emergency Contact</h3>
-        <button id="close-contact-modal" style="font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+    <!-- 2. Add / Edit Contact Modal -->
+    <div id="add-contact-modal" class="modal-backdrop">
+      <div class="modal-content">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+          "
+        >
+          <h3 class="heading-md" id="contact-modal-title">
+            Add Emergency Contact
+          </h3>
+          <button
+            id="close-contact-modal"
+            style="font-size: 1.5rem; cursor: pointer; color: var(--text-muted)"
+          >
+            &times;
+          </button>
+        </div>
+
+        <form id="add-contact-form">
+          <input type="hidden" id="contact-edit-id" value="" />
+          <div class="form-group">
+            <label class="form-label" for="contact-name">Full Name</label>
+            <input
+              type="text"
+              id="contact-name"
+              class="form-input"
+              placeholder="e.g. Robert Johnson"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="contact-relation"
+              >Relationship</label
+            >
+            <input
+              type="text"
+              id="contact-relation"
+              class="form-input"
+              placeholder="e.g. Father, Spouse, Friend"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="contact-phone">Phone Number</label>
+            <input
+              type="tel"
+              id="contact-phone"
+              class="form-input"
+              placeholder="+91 98765 11111"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="contact-email"
+              >Email (Optional)</label
+            >
+            <input
+              type="email"
+              id="contact-email"
+              class="form-input"
+              placeholder="contact@example.com"
+            />
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary btn-full"
+            id="contact-submit-btn"
+            style="margin-top: 1rem"
+          >
+            Save Contact
+          </button>
+        </form>
       </div>
-
-      <form id="add-contact-form">
-        <input type="hidden" id="contact-edit-id" value="">
-        <div class="form-group">
-          <label class="form-label" for="contact-name">Full Name</label>
-          <input type="text" id="contact-name" class="form-input" placeholder="e.g. Robert Johnson" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="contact-relation">Relationship</label>
-          <input type="text" id="contact-relation" class="form-input" placeholder="e.g. Father, Spouse, Friend" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="contact-phone">Phone Number</label>
-          <input type="tel" id="contact-phone" class="form-input" placeholder="+91 98765 11111" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="contact-email">Email (Optional)</label>
-          <input type="email" id="contact-email" class="form-input" placeholder="contact@example.com">
-        </div>
-        <button type="submit" class="btn btn-primary btn-full" id="contact-submit-btn" style="margin-top: 1rem;">Save Contact</button>
-      </form>
     </div>
-  </div>
 
-  <!-- 3. SOS Confirmation & Status Modal -->
-  <div id="sos-modal" class="modal-backdrop">
-    <div class="modal-content" style="text-align: center; max-width: 440px;">
-      <div style="font-size: 3rem; margin-bottom: 0.5rem;">🚨</div>
-      <h3 class="heading-md" style="margin-bottom: 0.5rem; color: var(--accent-red);">CONFIRM EMERGENCY SOS</h3>
-      <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">
-        You are about to send an emergency alert with your live location (<strong id="sos-modal-location">Lucknow</strong>) to all registered emergency contacts.
-      </p>
+    <!-- 3. SOS Confirmation & Status Modal -->
+    <div id="sos-modal" class="modal-backdrop">
+      <div class="modal-content" style="text-align: center; max-width: 440px">
+        <div style="font-size: 3rem; margin-bottom: 0.5rem">🚨</div>
+        <h3
+          class="heading-md"
+          style="margin-bottom: 0.5rem; color: var(--accent-red)"
+        >
+          CONFIRM EMERGENCY SOS
+        </h3>
+        <p
+          style="
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+          "
+        >
+          You are about to send an emergency alert with your live location
+          (<strong id="sos-modal-location">Lucknow</strong>) to all registered
+          emergency contacts.
+        </p>
 
-      <div style="background: #FFF9F5; border: 1px dashed var(--accent-red); border-radius: var(--radius-sm); padding: 0.75rem; margin-bottom: 1.5rem; font-size: 0.82rem; color: var(--text-secondary);">
-        ⚡ Text messages and app alerts will be sent right away.
-      </div>
+        <div
+          style="
+            background: #fff9f5;
+            border: 1px dashed var(--accent-red);
+            border-radius: var(--radius-sm);
+            padding: 0.75rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+          "
+        >
+          ⚡ Text messages and app alerts will be sent right away.
+        </div>
 
-      <div style="display: flex; gap: 0.75rem;">
-        <button id="btn-cancel-sos" class="btn btn-secondary btn-full">Cancel</button>
-        <button id="btn-confirm-sos" class="btn btn-danger btn-full">Confirm & Send SOS</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 4. Safety Circle Invite Modal -->
-  <div id="invite-modal" class="modal-backdrop">
-    <div class="modal-content" style="max-width: 480px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-        <h3 class="heading-md">Invite to Safety Circle</h3>
-        <button id="close-invite-modal" style="font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
-      </div>
-
-      <p class="subtext" style="font-size: 0.9rem; margin-bottom: 1.25rem;">
-        Share this unique invite link with family, friends, or neighbors so they can join your safety circle and receive live flood alerts.
-      </p>
-
-      <div class="form-group">
-        <label class="form-label">Unique Invite Link</label>
-        <div style="display: flex; gap: 0.5rem;">
-          <input type="text" id="invite-link-input" class="form-input" readonly value="" style="font-size: 0.85rem;">
-          <button id="btn-copy-invite-modal" class="btn btn-primary" style="white-space: nowrap;">Copy Link</button>
+        <div style="display: flex; gap: 0.75rem">
+          <button id="btn-cancel-sos" class="btn btn-secondary btn-full">
+            Cancel
+          </button>
+          <button id="btn-confirm-sos" class="btn btn-danger btn-full">
+            Confirm & Send SOS
+          </button>
         </div>
       </div>
-
-      <div style="display: flex; align-items: center; text-align: center; margin: 1.25rem 0; color: var(--text-muted); font-size: 0.85rem;">
-        <span style="flex:1; border-bottom:1px solid var(--border);"></span>
-        <span style="padding: 0 0.75rem;">or add directly</span>
-        <span style="flex:1; border-bottom:1px solid var(--border);"></span>
-      </div>
-
-      <button id="btn-open-add-contact-direct" class="btn btn-secondary btn-full">
-        + Add Person / Contact Directly
-      </button>
     </div>
-  </div>
 
-  <!-- ═══════════════════════════════════════════════════
+    <!-- 4. Safety Circle Invite Modal -->
+    <div id="invite-modal" class="modal-backdrop">
+      <div class="modal-content" style="max-width: 480px">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+          "
+        >
+          <h3 class="heading-md">Invite to Safety Circle</h3>
+          <button
+            id="close-invite-modal"
+            style="font-size: 1.5rem; cursor: pointer; color: var(--text-muted)"
+          >
+            &times;
+          </button>
+        </div>
+
+        <p class="subtext" style="font-size: 0.9rem; margin-bottom: 1.25rem">
+          Share this unique invite link with family, friends, or neighbors so
+          they can join your safety circle and receive live flood alerts.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Unique Invite Link</label>
+          <div style="display: flex; gap: 0.5rem">
+            <input
+              type="text"
+              id="invite-link-input"
+              class="form-input"
+              readonly
+              value=""
+              style="font-size: 0.85rem"
+            />
+            <button
+              id="btn-copy-invite-modal"
+              class="btn btn-primary"
+              style="white-space: nowrap"
+            >
+              Copy Link
+            </button>
+          </div>
+        </div>
+
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 1.25rem 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+          "
+        >
+          <span style="flex: 1; border-bottom: 1px solid var(--border)"></span>
+          <span style="padding: 0 0.75rem">or add directly</span>
+          <span style="flex: 1; border-bottom: 1px solid var(--border)"></span>
+        </div>
+
+        <button
+          id="btn-open-add-contact-direct"
+          class="btn btn-secondary btn-full"
+        >
+          + Add Person / Contact Directly
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
        FLOATING DONATION PIP / BADGE (always visible)
        ═══════════════════════════════════════════════════ -->
-  <div id="donate-floating-pip" role="button" aria-label="Donate to Flood Relief" tabindex="0">
-    <button class="donate-pip-btn" aria-hidden="true">🫶</button>
-    <span class="donate-pip-label">Donate</span>
-  </div>
+    <div
+      id="donate-floating-pip"
+      role="button"
+      aria-label="Donate to Flood Relief"
+      tabindex="0"
+    >
+      <button class="donate-pip-btn" aria-hidden="true">🫶</button>
+      <span class="donate-pip-label">Donate</span>
+    </div>
 
-  <!-- ═══════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════
        5. DONATION MODAL
        ═══════════════════════════════════════════════════ -->
-  <div id="donation-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="donation-modal-title">
-    <div class="modal-content">
+    <div
+      id="donation-modal"
+      class="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="donation-modal-title"
+    >
+      <div class="modal-content">
+        <!-- Modal Header (orange gradient) -->
+        <div class="donation-modal-header">
+          <h3 id="donation-modal-title">🫶 Flood Relief — Donate Safely</h3>
+          <p>
+            All portals below are official Indian government relief funds. Your
+            payment goes directly to verified authorities.
+          </p>
+          <button
+            id="btn-close-donation-modal"
+            aria-label="Close donation modal"
+          >
+            &times;
+          </button>
+        </div>
 
-      <!-- Modal Header (orange gradient) -->
-      <div class="donation-modal-header">
-        <h3 id="donation-modal-title">🫶 Flood Relief — Donate Safely</h3>
-        <p>All portals below are official Indian government relief funds. Your payment goes directly to verified authorities.</p>
-        <button id="btn-close-donation-modal" aria-label="Close donation modal">&times;</button>
-      </div>
+        <!-- Portal List (loaded dynamically by JS) -->
+        <div class="donation-modal-body" id="donation-portal-list">
+          <!-- Loading skeleton shown before JS renders portals -->
+          <div class="donate-loading">
+            <div class="donate-skeleton"></div>
+            <div class="donate-skeleton"></div>
+            <div class="donate-skeleton" style="height: 80px"></div>
+          </div>
+        </div>
 
-      <!-- Portal List (loaded dynamically by JS) -->
-      <div class="donation-modal-body" id="donation-portal-list">
-        <!-- Loading skeleton shown before JS renders portals -->
-        <div class="donate-loading">
-          <div class="donate-skeleton"></div>
-          <div class="donate-skeleton"></div>
-          <div class="donate-skeleton" style="height:80px;"></div>
+        <!-- Footer Disclaimer -->
+        <div class="donation-modal-footer">
+          <span class="lock-icon">🔒</span>
+          <span
+            >FloodSAHAAY <strong>never handles payment data</strong>. Clicking
+            "Donate Now" opens the official government portal in a new tab. All
+            UPI IDs listed are publicly verified by the respective
+            ministry.</span
+          >
         </div>
       </div>
-
-      <!-- Footer Disclaimer -->
-      <div class="donation-modal-footer">
-        <span class="lock-icon">🔒</span>
-        <span>FloodSAHAAY <strong>never handles payment data</strong>. Clicking "Donate Now" opens the official government portal in a new tab. All UPI IDs listed are publicly verified by the respective ministry.</span>
-      </div>
-
     </div>
-  </div>
 
-  <!-- 5. Emergency Help Request Modal -->
-  <div id="help-request-modal" class="modal-backdrop">
-    <div class="modal-content" style="max-width: 520px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-        <h3 class="heading-md" style="margin: 0;">🆘 Request Community Help</h3>
-        <button id="close-help-request-modal" style="font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
-      </div>
-      <form id="help-request-form">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
-          <div>
-            <label class="label-caps">CATEGORY</label>
-            <select id="req-category" class="input" required>
-              <option value="rescue">Boat / Flood Rescue</option>
-              <option value="medical">Medical First Aid / Medicine</option>
-              <option value="food">Emergency Food Packs</option>
-              <option value="water">Drinking Water</option>
-              <option value="transport">High-Ground Transport</option>
-              <option value="shelter">Shelter Space</option>
-            </select>
-          </div>
-          <div>
-            <label class="label-caps">URGENCY (1-5)</label>
-            <select id="req-urgency" class="input">
-              <option value="5">Level 5 (Life Critical / Submerged)</option>
-              <option value="4">Level 4 (Urgent / Rising Waters)</option>
-              <option value="3" selected>Level 3 (Moderate Need)</option>
-              <option value="2">Level 2 (Preventative)</option>
-              <option value="1">Level 1 (General Support)</option>
-            </select>
-          </div>
+    <!-- 5. Emergency Help Request Modal -->
+    <div id="help-request-modal" class="modal-backdrop">
+      <div class="modal-content" style="max-width: 520px">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+          "
+        >
+          <h3 class="heading-md" style="margin: 0">
+            🆘 Request Community Help
+          </h3>
+          <button
+            id="close-help-request-modal"
+            style="font-size: 1.5rem; cursor: pointer; color: var(--text-muted)"
+          >
+            &times;
+          </button>
         </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
-          <div>
-            <label class="label-caps">PEOPLE COUNT</label>
-            <input type="number" id="req-people" class="input" value="1" min="1" max="50" required>
-          </div>
-          <div>
-            <label class="label-caps">VULNERABILITY FLAGS</label>
-            <div style="display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.2rem;">
-              <label style="font-size: 0.75rem;"><input type="checkbox" class="vuln-flag" value="elderly"> Senior</label>
-              <label style="font-size: 0.75rem;"><input type="checkbox" class="vuln-flag" value="infant"> Infant</label>
-              <label style="font-size: 0.75rem;"><input type="checkbox" class="vuln-flag" value="disabled"> Disabled</label>
-              <label style="font-size: 0.75rem;"><input type="checkbox" class="vuln-flag" value="medical"> Medical</label>
+        <form id="help-request-form">
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 0.75rem;
+              margin-bottom: 0.75rem;
+            "
+          >
+            <div>
+              <label class="label-caps">CATEGORY</label>
+              <select id="req-category" class="input" required>
+                <option value="rescue">Boat / Flood Rescue</option>
+                <option value="medical">Medical First Aid / Medicine</option>
+                <option value="food">Emergency Food Packs</option>
+                <option value="water">Drinking Water</option>
+                <option value="transport">High-Ground Transport</option>
+                <option value="shelter">Shelter Space</option>
+              </select>
+            </div>
+            <div>
+              <label class="label-caps">URGENCY (1-5)</label>
+              <select id="req-urgency" class="input">
+                <option value="5">Level 5 (Life Critical / Submerged)</option>
+                <option value="4">Level 4 (Urgent / Rising Waters)</option>
+                <option value="3" selected>Level 3 (Moderate Need)</option>
+                <option value="2">Level 2 (Preventative)</option>
+                <option value="1">Level 1 (General Support)</option>
+              </select>
             </div>
           </div>
-        </div>
 
-        <div class="form-group" style="margin-bottom: 0.75rem;">
-          <label class="label-caps">LOCATION / ADDRESS</label>
-          <input type="text" id="req-address" class="input" placeholder="House / street landmark near Gomti Nagar..." required>
-        </div>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 0.75rem;
+              margin-bottom: 0.75rem;
+            "
+          >
+            <div>
+              <label class="label-caps">PEOPLE COUNT</label>
+              <input
+                type="number"
+                id="req-people"
+                class="input"
+                value="1"
+                min="1"
+                max="50"
+                required
+              />
+            </div>
+            <div>
+              <label class="label-caps">VULNERABILITY FLAGS</label>
+              <div
+                style="
+                  display: flex;
+                  gap: 0.35rem;
+                  flex-wrap: wrap;
+                  margin-top: 0.2rem;
+                "
+              >
+                <label style="font-size: 0.75rem"
+                  ><input type="checkbox" class="vuln-flag" value="elderly" />
+                  Senior</label
+                >
+                <label style="font-size: 0.75rem"
+                  ><input type="checkbox" class="vuln-flag" value="infant" />
+                  Infant</label
+                >
+                <label style="font-size: 0.75rem"
+                  ><input type="checkbox" class="vuln-flag" value="disabled" />
+                  Disabled</label
+                >
+                <label style="font-size: 0.75rem"
+                  ><input type="checkbox" class="vuln-flag" value="medical" />
+                  Medical</label
+                >
+              </div>
+            </div>
+          </div>
 
-        <div class="form-group" style="margin-bottom: 1.25rem;">
-          <label class="label-caps">SPECIFIC NEEDS / SITUATION</label>
-          <textarea id="req-notes" class="input" rows="2" placeholder="e.g. Ground floor flooded, 2 elderly family members need assistance to reach dry road..."></textarea>
-        </div>
+          <div class="form-group" style="margin-bottom: 0.75rem">
+            <label class="label-caps">LOCATION / ADDRESS</label>
+            <input
+              type="text"
+              id="req-address"
+              class="input"
+              placeholder="House / street landmark near Gomti Nagar..."
+              required
+            />
+          </div>
 
-        <button type="submit" class="btn btn-primary btn-full" style="background: #2563EB; border-color: #2563EB;">
-          Dispatch Help Request
-        </button>
-      </form>
-    </div>
-  </div>
+          <div class="form-group" style="margin-bottom: 1.25rem">
+            <label class="label-caps">SPECIFIC NEEDS / SITUATION</label>
+            <textarea
+              id="req-notes"
+              class="input"
+              rows="2"
+              placeholder="e.g. Ground floor flooded, 2 elderly family members need assistance to reach dry road..."
+            ></textarea>
+          </div>
 
-  <!-- 6. Low Battery Auto-Share Prompt Modal -->
-  <div id="battery-share-modal" class="modal-backdrop">
-    <div class="modal-content" style="text-align: center; max-width: 400px;">
-      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔋</div>
-      <h3 class="heading-md" style="margin-bottom: 0.5rem; color: #D97706;">Low Battery Warning (<span id="battery-modal-pct">14%</span>)</h3>
-      <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.4;">
-        Your device battery is dropping low and not connected to a charger. Would you like to automatically share your last known location with your Safety Circle now?
-      </p>
-      <div style="display: flex; gap: 0.75rem;">
-        <button id="btn-skip-battery-share" class="btn btn-secondary btn-full">Not Now</button>
-        <button id="btn-confirm-battery-share" class="btn btn-primary btn-full" style="background: #10B981; border-color: #10B981;">Share Location</button>
+          <button
+            type="submit"
+            class="btn btn-primary btn-full"
+            style="background: #2563eb; border-color: #2563eb"
+          >
+            Dispatch Help Request
+          </button>
+        </form>
       </div>
     </div>
-  </div>
 
-  <script src="../js/services/api.js?v=20260821-3"></script>
-  <script src="../js/services/auth.service.js"></script>
-  <script src="../js/services/reports.service.js"></script>
-  <script src="../js/pages/dashboard.js?v=20260821-3"></script>
+    <!-- 6. Low Battery Auto-Share Prompt Modal -->
+    <div id="battery-share-modal" class="modal-backdrop">
+      <div class="modal-content" style="text-align: center; max-width: 400px">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem">🔋</div>
+        <h3 class="heading-md" style="margin-bottom: 0.5rem; color: #d97706">
+          Low Battery Warning (<span id="battery-modal-pct">14%</span>)
+        </h3>
+        <p
+          style="
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.25rem;
+            line-height: 1.4;
+          "
+        >
+          Your device battery is dropping low and not connected to a charger.
+          Would you like to automatically share your last known location with
+          your Safety Circle now?
+        </p>
+        <div style="display: flex; gap: 0.75rem">
+          <button
+            id="btn-skip-battery-share"
+            class="btn btn-secondary btn-full"
+          >
+            Not Now
+          </button>
+          <button
+            id="btn-confirm-battery-share"
+            class="btn btn-primary btn-full"
+            style="background: #10b981; border-color: #10b981"
+          >
+            Share Location
+          </button>
+        </div>
+      </div>
+    </div>
 
-</body>
+    <script src="../js/services/api.js?v=20260821-3"></script>
+    <script src="../js/services/auth.service.js"></script>
+    <script src="../js/services/reports.service.js"></script>
+    <script src="../js/pages/dashboard.js?v=20260821-3"></script>
+  </body>
 </html>
-
