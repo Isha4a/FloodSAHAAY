@@ -146,11 +146,16 @@ document.addEventListener('DOMContentLoaded', () => {
     return { name, displayName: data.display_name || name, lat, lng };
   }
 
-  // 2. Tab Navigation Router
+  // 2. Tab Navigation Router (Clean Citizen Tabs)
+  const validTabs = ['overview', 'map', 'alerts', 'emergency', 'safety', 'shelters', 'recovery', 'helpline'];
   const tabs = document.querySelectorAll('.nav-tab');
   const panels = document.querySelectorAll('.tab-panel');
 
   function switchTab(tabId) {
+    if (!validTabs.includes(tabId)) {
+      tabId = 'overview';
+    }
+
     tabs.forEach(t => {
       if (t.dataset.tab === tabId) t.classList.add('active');
       else t.classList.remove('active');
@@ -162,10 +167,21 @@ document.addEventListener('DOMContentLoaded', () => {
       else t.classList.remove('active');
     });
 
+    // Also sync mobile bottom bar active state
+    document.querySelectorAll('#mobile-bottom-bar .nav-tab').forEach(t => {
+      if (t.dataset.tab === tabId) t.classList.add('active');
+      else t.classList.remove('active');
+    });
+
     panels.forEach(p => {
       if (p.id === `tab-${tabId}`) p.classList.add('active');
       else p.classList.remove('active');
     });
+
+    // Update URL hash without jumping
+    try {
+      history.replaceState(null, null, `#${tabId}`);
+    } catch (e) {}
 
     // Invalidate Leaflet Map Sizes and re-center on Switch
     const refreshActiveMap = () => {
@@ -188,12 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
         sheltersMap.invalidateSize();
         if (selectedLoc) sheltersMap.setView([selectedLoc.lat, selectedLoc.lng], sheltersMap.getZoom() || 12);
       }
-      if (tabId === 'reports' && reportPickerMap) {
-        reportPickerMap.invalidateSize();
-        if (reportPickerMarker && reportPickerLoc) {
-          reportPickerMarker.setLatLng([reportPickerLoc.lat, reportPickerLoc.lng]);
-        }
-      }
     };
 
     requestAnimationFrame(refreshActiveMap);
@@ -201,11 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(refreshActiveMap, 200);
     setTimeout(refreshActiveMap, 500);
 
-    if (tabId === 'reports') {
-      loadReportsData();
-    } else if (tabId === 'volunteers') {
-      loadVolunteerModule();
-    } else if (tabId === 'recovery') {
+    if (tabId === 'recovery') {
       loadRecoveryModule();
     } else if (tabId === 'alerts') {
       loadAlertsData();
@@ -214,7 +220,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-
   tabs.forEach(t => {
     t.addEventListener('click', (e) => {
       e.preventDefault();
@@ -222,6 +227,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (tabId) switchTab(tabId);
     });
   });
+
+  // Initial tab determination from URL hash
+  const initialHash = (window.location.hash || '').replace('#', '').trim();
+  switchTab(validTabs.includes(initialHash) ? initialHash : 'overview');
 
   // Expand Map Button in Overview
   const expandMapBtn = document.getElementById('btn-expand-map');
@@ -1562,27 +1571,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return Math.sqrt(distSq);
   }
 
-  // 11. Role-based Navigation Badges
+  // 11. User Profile Init
   async function initRoleNav() {
     try {
       const user = AuthService.getUser();
-      let role = user?.role || 'citizen';
-      try {
-        const prof = await ApiService.get('/profile');
-        if (prof.success && prof.user) {
-          role = prof.user.role || role;
-        }
-      } catch (e) {}
-
-      const headerAdmin = document.getElementById('header-admin-link');
-      const mobileAdmin = document.getElementById('mobile-admin-link');
-      if (headerAdmin) headerAdmin.style.display = 'inline-block';
-      if (mobileAdmin) mobileAdmin.style.display = 'block';
-
-      const headerShelter = document.getElementById('header-shelter-link');
-      const mobileShelter = document.getElementById('mobile-shelter-link');
-      if (headerShelter) headerShelter.style.display = 'inline-block';
-      if (mobileShelter) mobileShelter.style.display = 'block';
       const volName = document.getElementById('vol-display-name');
       if (volName && user?.name) volName.textContent = user.name;
     } catch (err) {}

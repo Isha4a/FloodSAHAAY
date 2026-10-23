@@ -33,19 +33,15 @@
     <nav class="nav-tabs" id="desktop-nav">
       <a href="#overview" class="nav-tab active" data-tab="overview">Overview</a>
       <a href="#map" class="nav-tab" data-tab="map">Map</a>
-      <a href="#reports" class="nav-tab" data-tab="reports">Reports <span id="nav-reports-badge" class="badge badge-high" style="padding: 2px 6px; font-size: 0.7rem; display: none;"></span></a>
       <a href="#alerts" class="nav-tab" data-tab="alerts">Alerts <span id="nav-alerts-badge" class="badge badge-critical" style="padding: 2px 6px; font-size: 0.7rem; display: none;"></span></a>
       <a href="#emergency" class="nav-tab" data-tab="emergency">Emergency</a>
       <a href="#safety" class="nav-tab" data-tab="safety">Safety</a>
       <a href="#shelters" class="nav-tab" data-tab="shelters">Shelters</a>
-      <a href="#volunteers" class="nav-tab" data-tab="volunteers">Volunteers</a>
-      <a href="#recovery" class="nav-tab" data-tab="recovery">Recovery</a>
+      <a href="#recovery" class="nav-tab" data-tab="recovery">Recovery & First Aid</a>
       <a href="#helpline" class="nav-tab" data-tab="helpline">Helpline</a>
     </nav>
 
     <div class="nav-right">
-      <a href="admin.html" id="header-admin-link" class="badge" style="background: #DC2626; color: #FFF; text-decoration: none; padding: 0.35rem 0.65rem; font-weight: 700; display: inline-block;">🚨 Command Center</a>
-      <a href="shelter-manager.html" id="header-shelter-link" class="badge" style="background: #8B5CF6; color: #FFF; text-decoration: none; padding: 0.35rem 0.65rem; font-weight: 700; display: inline-block;">🏠 Shelter Ops</a>
       <span id="current-location-label" title="Click to change location" style="cursor: pointer; padding: 0.3rem 0.6rem; background: rgba(0,0,0,0.04); border-radius: var(--radius-sm); font-weight: 600;">📍 Lucknow</span>
       <button id="btn-open-donation" class="btn btn-donate btn-sm" title="Donate to government flood relief funds">🫶 Donate Relief</button>
       <a href="profile.html">Profile</a>
@@ -734,221 +730,303 @@
       </div>
     </section>
 
-    <!-- 9. VOLUNTEERS & HELP REQUESTS TAB -->
-    <section id="tab-volunteers" class="tab-panel">
-      <div class="dashboard-layout">
-        <div class="dashboard-main">
-          
-          <!-- Citizen Emergency Help Request Banner -->
-          <div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 100%); border-left: 5px solid #2563EB;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-              <div>
-                <span class="label-caps" style="color: #2563EB;">COMMUNITY AID DISPATCH</span>
-                <h2 class="heading-md" style="margin: 0.2rem 0;">Need Evacuation or Supplies Assistance?</h2>
-                <p class="subtext">Connect directly with vetted local rescue, medical, boat, and food relief volunteers.</p>
-              </div>
-              <button id="btn-open-help-request-modal" class="btn btn-primary" style="background: #2563EB; border-color: #2563EB;">
-                + Request Emergency Help
-              </button>
-            </div>
-          </div>
-
-          <!-- My Help Requests List -->
-          <div class="card" style="margin-bottom: 1.5rem;">
-            <h3 class="heading-md" style="margin-bottom: 0.75rem;">My Active Help Requests</h3>
-            <div id="my-help-requests-list">
-              <span class="subtext">You have not submitted any open help requests.</span>
-            </div>
-          </div>
-
-          <!-- Open Requests Nearby (For Volunteers to Claim) -->
-          <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-              <div>
-                <h3 class="heading-md" style="margin: 0;">Nearby Open Community Requests</h3>
-                <p class="subtext">Volunteers can accept open tasks. First responder to accept is matched.</p>
-              </div>
-              <button id="btn-refresh-help-requests" class="btn btn-secondary btn-sm">↻ Refresh</button>
-            </div>
-            <div id="nearby-help-requests-list">
-              <span class="subtext">Loading available requests...</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Sidebar: Volunteer Profile Controls -->
-        <div class="dashboard-sidebar">
-          <div class="card" style="margin-bottom: 1.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-              <span class="label-caps">VOLUNTEER READINESS</span>
-              <span id="vol-avail-badge" class="badge badge-live">AVAILABLE</span>
-            </div>
-
-            <h3 class="heading-md" style="margin-bottom: 0.5rem;" id="vol-display-name">Field Volunteer</h3>
-            <p class="subtext" style="margin-bottom: 1rem;">Toggle your dispatch availability status for emergency matching.</p>
-
-            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem;">
-              <button class="btn btn-primary btn-sm btn-vol-avail" data-avail="available" style="flex: 1;">Available</button>
-              <button class="btn btn-secondary btn-sm btn-vol-avail" data-avail="busy" style="flex: 1;">Busy</button>
-              <button class="btn btn-secondary btn-sm btn-vol-avail" data-avail="offline" style="flex: 1;">Offline</button>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0.75rem;">
-              <label class="label-caps">YOUR SKILLS</label>
-              <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.25rem;">
-                <label class="badge" style="background: var(--bg-surface); cursor: pointer;"><input type="checkbox" class="vol-skill-chk" value="rescue" checked> 🏊 Rescue</label>
-                <label class="badge" style="background: var(--bg-surface); cursor: pointer;"><input type="checkbox" class="vol-skill-chk" value="boat" checked> 🚤 Boat</label>
-                <label class="badge" style="background: var(--bg-surface); cursor: pointer;"><input type="checkbox" class="vol-skill-chk" value="medical"> 💊 Medical</label>
-                <label class="badge" style="background: var(--bg-surface); cursor: pointer;"><input type="checkbox" class="vol-skill-chk" value="driving" checked> 🚙 Driving</label>
-                <label class="badge" style="background: var(--bg-surface); cursor: pointer;"><input type="checkbox" class="vol-skill-chk" value="food"> 🍲 Food</label>
-              </div>
-            </div>
-
-            <button id="btn-save-vol-profile" class="btn btn-secondary btn-sm btn-full" style="margin-top: 0.5rem;">
-              Save Volunteer Profile
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 10. POST-FLOOD RECOVERY MODULE TAB -->
+    <!-- 7. RECOVERY, FIRST AID & SURVIVAL MANUAL TAB -->
     <section id="tab-recovery" class="tab-panel">
-      <div style="max-width: 1080px; margin: 1.5rem auto; padding: 0 1rem;">
+      <div style="max-width: 1100px; margin: 1.5rem auto; padding: 0 1rem;">
         
-        <!-- Risk-Aware Health Advisory Banner -->
-        <div id="recovery-health-banner" class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, #FFFBEB 0%, #FFFFFF 100%); border-left: 5px solid #F59E0B;">
-          <div style="display: flex; align-items: flex-start; gap: 1rem;">
-            <span style="font-size: 2.2rem;">💧</span>
-            <div>
-              <span class="label-caps" style="color: #D97706;">WATER SAFETY & EPIDEMIC ADVISORY ACTIVE</span>
-              <h2 class="heading-md" style="margin: 0.25rem 0;">High Infection Risk in Submerged & Receding Zones</h2>
-              <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
-                Floodwaters carry sewage, chemical toxins, and leptospirosis bacteria. Never consume unboiled tap water. Wash wounds immediately with antiseptic.
-              </p>
+        <!-- Tab Header -->
+        <div style="margin-bottom: 2rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+            <span class="badge badge-critical" style="font-weight: 700; letter-spacing: 0.5px;">MEDICAL & RECOVERY</span>
+            <span class="subtext">Offline-ready survival protocols</span>
+          </div>
+          <h1 class="heading-lg" style="margin: 0.2rem 0;">Post-Flood Recovery, First Aid & Survival Guide</h1>
+          <p class="subtext" style="font-size: 0.95rem;">
+            Essential emergency procedures, snake bite response, water decontamination, wound care, and government relief compensation.
+          </p>
+        </div>
+
+        <!-- 1. SNAKE BITE EMERGENCY PROTOCOL (TOP CRITICAL SECTION) -->
+        <div class="card" style="margin-bottom: 2rem; border: 2px solid #DC2626; background: #FFF; box-shadow: 0 4px 20px rgba(220, 38, 38, 0.1); border-radius: 12px; overflow: hidden; padding: 0;">
+          <!-- Banner Header -->
+          <div style="background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%); color: #FFF; padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span style="font-size: 2.2rem; line-height: 1;">🐍</span>
+              <div>
+                <span class="badge" style="background: #FEF2F2; color: #DC2626; font-weight: 800; font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 0.2rem;">CRITICAL FLOOD HAZARD</span>
+                <h2 style="font-size: 1.3rem; font-weight: 800; color: #FFF; margin: 0;">Snake Bite Emergency Management Protocol</h2>
+              </div>
+            </div>
+            <a href="tel:108" class="btn" style="background: #FFF; color: #DC2626; font-weight: 800; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px;">
+              🚨 Call Ambulance 108
+            </a>
+          </div>
+
+          <!-- Snake Bite Content Body -->
+          <div style="padding: 1.5rem;">
+            <p style="font-size: 0.92rem; color: #374151; line-height: 1.6; margin-bottom: 1.25rem;">
+              <strong>Why Snake Bites Surge After Floods:</strong> Floodwaters submerge ground burrows, driving snakes (Cobras, Russell's Vipers, Kraits) to take refuge in dry huts, rooftops, furniture, bedding, and tree branches. <em>Anti-Snake Venom (ASV) administered in a hospital is the ONLY cure.</em>
+            </p>
+
+            <!-- DOs vs DONTs Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;" class="recovery-split-grid">
+              
+              <!-- DO'S -->
+              <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 1.25rem;">
+                <h3 style="font-size: 1.05rem; font-weight: 800; color: #166534; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                  <span>✅</span> WHAT TO DO IMMEDIATELY (Do's)
+                </h3>
+                <ul style="padding-left: 1.2rem; font-size: 0.88rem; color: #14532D; line-height: 1.6; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
+                  <li><strong>Keep the victim 100% calm and immobile:</strong> Any movement, panic, or walking increases heart rate and speeds up venom dissemination through the lymphatic system.</li>
+                  <li><strong>Immobilize the bitten limb:</strong> Splint the arm or leg with a firm stick or rolled cardboard and a broad, snug bandage. Prevent any joint from bending.</li>
+                  <li><strong>Keep the bite BELOW heart level:</strong> Prevents rapid venous rush toward vital organs.</li>
+                  <li><strong>Remove tight items immediately:</strong> Rings, bracelets, watches, anklets, and shoes MUST come off before swelling becomes severe.</li>
+                  <li><strong>Remember snake appearance (if safe):</strong> Note color, head shape, and stripe pattern to tell doctors. Do NOT try to catch or kill the snake.</li>
+                  <li><strong>Transport immediately to hospital:</strong> Keep patient lying flat on their side (Recovery Position) during transport.</li>
+                </ul>
+              </div>
+
+              <!-- DONT'S -->
+              <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 1.25rem;">
+                <h3 style="font-size: 1.05rem; font-weight: 800; color: #991B1B; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                  <span>❌</span> WHAT NEVER TO DO (Deadly Myths)
+                </h3>
+                <ul style="padding-left: 1.2rem; font-size: 0.88rem; color: #7F1D1D; line-height: 1.6; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
+                  <li><strong>DO NOT cut, slash, or make incisions:</strong> Cutting through bite punctures damages nerves, causes uncontrollable arterial bleeding, and worsens infection.</li>
+                  <li><strong>DO NOT suck venom with mouth or pump:</strong> Venom is absorbed deep in tissue within seconds. Mouth contact can poison the rescuer.</li>
+                  <li><strong>DO NOT apply tight tourniquets or ropes:</strong> Cutting off arterial blood flow causes severe localized tissue death (gangrene) and limb amputation.</li>
+                  <li><strong>DO NOT apply ice, electricity, or chemicals:</strong> Ice causes severe frostbite necrosis; electric shocks can cause cardiac arrest.</li>
+                  <li><strong>DO NOT visit faith healers (Jhad-phook):</strong> Wastes the "Golden Hour" (first 60–90 mins) when Anti-Snake Venom is most effective.</li>
+                  <li><strong>DO NOT give aspirin, pain pills, or alcohol:</strong> Aspirin thins blood and increases internal bleeding from viper bites.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Anti-venom contact strip -->
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <strong style="font-size: 0.9rem; color: #1E293B;">Nearest Anti-Venom Equipped Hospitals (Lucknow / UP Region):</strong>
+                <p class="subtext" style="font-size: 0.82rem; margin: 0.2rem 0 0;">Polyvalent anti-venom available 24x7 in Emergency Casualty Desks.</p>
+              </div>
+              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <a href="tel:05222257540" class="btn btn-secondary btn-sm" style="font-weight: 700; color: #DC2626;">🏥 KGMU Trauma: 0522-2257540</a>
+                <a href="tel:05222224011" class="btn btn-secondary btn-sm" style="font-weight: 700; color: #DC2626;">🏥 Balrampur Civil: 0522-2224011</a>
+                <a href="tel:108" class="btn btn-primary btn-sm" style="background: #DC2626; border-color: #DC2626;">🚨 Ambulance 108</a>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Split Grid: Damage Claim Form & My Claims -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;" class="recovery-split-grid">
+        <!-- 2. MEDICAL & SURVIVAL PROTOCOLS GRID -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
           
-          <!-- Damage Claim Form -->
-          <div class="card">
-            <h3 class="heading-md" style="margin-bottom: 0.25rem;">File Flood Damage Assessment</h3>
-            <p class="subtext" style="margin-bottom: 1.25rem;">Official relief compensation assessment claim.</p>
-
-            <form id="damage-report-form">
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
-                <div>
-                  <label class="label-caps">CATEGORY</label>
-                  <select id="dmg-category" class="input" required>
-                    <option value="house">Residential House</option>
-                    <option value="crop">Agricultural Crop</option>
-                    <option value="vehicle">Vehicle / Motor</option>
-                    <option value="livestock">Livestock / Cattle</option>
-                    <option value="infrastructure">Commercial / Shop</option>
-                    <option value="other">Other Assets</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="label-caps">SEVERITY</label>
-                  <select id="dmg-severity" class="input" required>
-                    <option value="minor">Minor Damage (< 25%)</option>
-                    <option value="moderate">Moderate Damage (25–50%)</option>
-                    <option value="severe">Severe Damage (50–75%)</option>
-                    <option value="destroyed">Total Collapse (100%)</option>
-                  </select>
-                </div>
+          <!-- Card A: Contaminated Wound Care & Tetanus -->
+          <div class="card" style="border-top: 4px solid #2563EB;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+              <span style="font-size: 1.8rem;">🩹</span>
+              <div>
+                <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0;">Flood Wound Care & Tetanus</h3>
+                <span class="subtext" style="font-size: 0.76rem;">Infection & Leptospirosis Control</span>
               </div>
-
-              <div class="form-group" style="margin-bottom: 0.75rem;">
-                <label class="label-caps">ESTIMATED LOSS IN RUPEES (INR ₹)</label>
-                <input type="number" id="dmg-loss" class="input" placeholder="e.g. 85000" min="0" required>
-              </div>
-
-              <div class="form-group" style="margin-bottom: 0.75rem;">
-                <label class="label-caps">DESCRIPTION OF LOSS & ASSET DETAILS</label>
-                <textarea id="dmg-description" class="input" rows="2" placeholder="Explain damage to boundary walls, roof, crops, electrical fixtures..." required></textarea>
-              </div>
-
-              <div class="form-group" style="margin-bottom: 1.25rem;">
-                <label class="label-caps">DAMAGE PHOTOS (UP TO 3)</label>
-                <input type="file" id="dmg-photos-input" accept="image/*" class="input" multiple>
-              </div>
-
-              <button type="submit" class="btn btn-primary btn-full">
-                📑 Submit Claim for Verification
-              </button>
-            </form>
+            </div>
+            <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.75rem;">
+              Floodwater contains raw sewage, soil bacteria, and leptospira organisms from rodent urine. Open cuts exposed to floodwaters carry life-threatening infection risks.
+            </p>
+            <div style="background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.82rem; line-height: 1.6; margin-bottom: 0.75rem;">
+              <strong>Step-by-step cleaning:</strong><br>
+              1. Flush wound thoroughly with clean boiled/bottled water and soap.<br>
+              2. Apply Povidone-Iodine (Betadine 10%) or chlorhexidine antiseptic.<br>
+              3. Cover with sterile gauze; keep elevated and dry.<br>
+              4. <strong>Tetanus Toxoid (TT) Warning:</strong> If wound was caused by rusty metal, submerged tin, or nails, get a TT injection within <strong>48 hours</strong>.
+            </div>
+            <div style="font-size: 0.8rem; color: #1D4ED8; font-weight: 600;">
+              ⚠️ Watch for "Rat Fever" (Leptospirosis): High fever, yellowing eyes (jaundice), red eyes, and severe calf muscle pain.
+            </div>
           </div>
 
-          <!-- My Claims History -->
-          <div class="card">
-            <h3 class="heading-md" style="margin-bottom: 0.25rem;">My Submitted Claims</h3>
-            <p class="subtext" style="margin-bottom: 1.25rem;">Track relief assessment verification status.</p>
-            <div id="my-damage-claims-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
-              <span class="subtext">Loading your claims...</span>
+          <!-- Card B: Drowning Resuscitation & CPR -->
+          <div class="card" style="border-top: 4px solid #EF4444;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+              <span style="font-size: 1.8rem;">🫀</span>
+              <div>
+                <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0;">Drowning Resuscitation & CPR</h3>
+                <span class="subtext" style="font-size: 0.76rem;">Emergency Airway Revival</span>
+              </div>
+            </div>
+            <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.75rem;">
+              When a person is pulled unconscious from floodwater, brain survival depends on immediate oxygenation within 3–4 minutes.
+            </p>
+            <div style="background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.82rem; line-height: 1.6; margin-bottom: 0.75rem;">
+              <strong>CPR Protocol:</strong><br>
+              1. <strong>Check responsiveness:</strong> Tap shoulders and shout. Check breathing for 10 seconds.<br>
+              2. <strong>Hands-Only CPR:</strong> Place hands in center of victim's chest. Press hard and fast (100–120 compressions/min, 2 inches deep).<br>
+              3. <strong>If trained in breaths:</strong> Give 30 compressions followed by 2 gentle rescue breaths (head tilt, chin lift).<br>
+              4. <strong>Recovery Position:</strong> If breathing resumes, turn victim onto their side with upper knee bent to prevent choking on vomited water.
+            </div>
+            <div style="font-size: 0.8rem; color: #DC2626; font-weight: 600;">
+              🚨 Never attempt to drain water from the stomach with abdominal thrusts—it causes regurgitation into lungs.
+            </div>
+          </div>
+
+          <!-- Card C: Water Purification & DIY ORS -->
+          <div class="card" style="border-top: 4px solid #059669;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+              <span style="font-size: 1.8rem;">💧</span>
+              <div>
+                <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0;">Safe Drinking Water & DIY ORS</h3>
+                <span class="subtext" style="font-size: 0.76rem;">Prevent Cholera, Typhoid & Dehydration</span>
+              </div>
+            </div>
+            <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.75rem;">
+              Municipal pipes and groundwater wells become heavily contaminated during floods. Never drink unfiltered or unboiled tap water.
+            </p>
+            <div style="background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.82rem; line-height: 1.6; margin-bottom: 0.75rem;">
+              <strong>3 Purification Methods:</strong><br>
+              • <strong>Vigorous Boiling:</strong> Rolling boil for at least 1–3 minutes.<br>
+              • <strong>Halazone/Chlorine Tablets:</strong> 1 tablet per 20 Liters of clear water. Wait 30 minutes before drinking.<br>
+              • <strong>Liquid Chlorine (5%):</strong> 2 drops per Liter of clear water.<br>
+              <strong>Life-Saving DIY ORS Formula:</strong><br>
+              Mix <strong>1 Litre boiled water</strong> + <strong>6 teaspoons sugar</strong> + <strong>1/2 teaspoon salt</strong>. Administer frequently for diarrhea/vomiting.
+            </div>
+            <div style="font-size: 0.8rem; color: #059669; font-weight: 600;">
+              ✓ Safe storage: Store treated water in narrow-mouth, covered containers to prevent recontamination.
+            </div>
+          </div>
+
+          <!-- Card D: Trench Foot & Fungal Infection -->
+          <div class="card" style="border-top: 4px solid #D97706;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+              <span style="font-size: 1.8rem;">🦶</span>
+              <div>
+                <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0;">Trench Foot & Fungal Skin Care</h3>
+                <span class="subtext" style="font-size: 0.76rem;">Prolonged Wet Foot Management</span>
+              </div>
+            </div>
+            <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.75rem;">
+              Standing in wet footwear or damp mud for more than 10–12 hours constricts blood vessels, destroying nerve endings and skin tissue (Immersion Foot).
+            </p>
+            <div style="background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.82rem; line-height: 1.6; margin-bottom: 0.75rem;">
+              <strong>Prevention Guidelines:</strong><br>
+              • Remove wet shoes and socks as soon as reaching dry shelter.<br>
+              • Wash feet with clean water and mild soap; dry thoroughly between toes.<br>
+              • Elevate feet above heart level for 30 minutes to restore circulation.<br>
+              • Apply antifungal powder (Clotrimazole) or coconut oil to prevent skin cracking.<br>
+              • <strong>Warning signs:</strong> Cold, numb, white, or blotchy blue skin requires urgent medical evaluation.
+            </div>
+          </div>
+
+          <!-- Card E: Electrical & LPG Gas Safety -->
+          <div class="card" style="border-top: 4px solid #7C3AED;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+              <span style="font-size: 1.8rem;">⚡</span>
+              <div>
+                <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0;">Electrical & Gas Re-Entry Safety</h3>
+                <span class="subtext" style="font-size: 0.76rem;">Prevent Electrocution & Explosions</span>
+              </div>
+            </div>
+            <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.75rem;">
+              Submerged electrical wiring and dislodged LPG gas cylinders cause fatal accidents when floodwaters recede.
+            </p>
+            <div style="background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.82rem; line-height: 1.6; margin-bottom: 0.75rem;">
+              <strong>Re-entry Precautions:</strong><br>
+              • <strong>Never step in water near outlets or appliances:</strong> Water conducts current even from partially submerged sockets.<br>
+              • <strong>Switch off main circuit breaker</strong> only if the fuse box and your standing area are completely dry.<br>
+              • <strong>Smell for gas (LPG):</strong> If you smell rotten eggs/sulfur, DO NOT turn on any light switch, match, or lighter. Evacuate immediately.<br>
+              • <strong>Do not use flooded electronics:</strong> Motors, inverters, and refrigerators must be dried and certified by a technician before power-on.
+            </div>
+          </div>
+
+          <!-- Card F: Structural Collapse Safety -->
+          <div class="card" style="border-top: 4px solid #4B5563;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+              <span style="font-size: 1.8rem;">🏚️</span>
+              <div>
+                <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0;">Building & Structural Inspection</h3>
+                <span class="subtext" style="font-size: 0.76rem;">Avoid Ceiling Collapses & Sinkholes</span>
+              </div>
+            </div>
+            <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.75rem;">
+              Receding floodwaters erode foundation soil, causing unexpected wall collapses and sinkholes.
+            </p>
+            <div style="background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.82rem; line-height: 1.6; margin-bottom: 0.75rem;">
+              <strong>Checklist Before Re-Entering Home:</strong><br>
+              • Look for horizontal or diagonal cracks in exterior walls.<br>
+              • Check if roof or ceiling is sagging under absorbed water weight.<br>
+              • Tap on floor tiles to verify soil beneath hasn't washed away.<br>
+              • Avoid leaning against boundary walls or waterlogged brick structures.<br>
+              • Discard all contaminated mattresses, pillows, and soaked upholstered furniture to stop black mold spores.
             </div>
           </div>
         </div>
 
-        <!-- Health & Safety Advisory Section ("After the flood") -->
-        <div style="margin-top: 2rem;">
-          <p class="label-caps" style="color: var(--primary);">OFFLINE-READY RECOVERY GUIDE</p>
-          <h2 class="heading-lg" style="margin: 0.25rem 0 0.5rem;">After the Flood: Health & Safety Protocols</h2>
-          <p class="subtext" style="margin-bottom: 1.5rem;">Essential steps to prevent disease outbreaks, electrical shocks, and contamination after waters recede.</p>
+        <!-- 3. OFFICIAL DISASTER RELIEF DAMAGE CLAIMS MODULE -->
+        <div style="margin-top: 2.5rem; border-top: 2px dashed var(--border); padding-top: 2rem;">
+          <div style="margin-bottom: 1.5rem;">
+            <span class="label-caps" style="color: var(--primary);">GOVERNMENT RELIEF & REHABILITATION</span>
+            <h2 class="heading-lg" style="margin: 0.2rem 0;">File Flood Damage Assessment Claim</h2>
+            <p class="subtext">
+              Submit verified documentation of damages to residential property, crops, vehicles, or livestock for official SDRF/NDRF relief compensation.
+            </p>
+          </div>
 
-          <div class="health-advisory-grid">
-            <div class="health-card">
-              <span style="font-size: 1.8rem;">🦠</span>
-              <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0.5rem 0 0.25rem;">Waterborne Disease Prevention</h3>
-              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
-                Watch for fever, vomiting, and diarrhea (cholera, typhoid, leptospirosis). Avoid wading in stagnant puddles with open cuts or scratches.
-              </p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;" class="recovery-split-grid">
+            
+            <!-- Damage Claim Form -->
+            <div class="card">
+              <h3 class="heading-md" style="margin-bottom: 0.25rem;">New Damage Claim</h3>
+              <p class="subtext" style="margin-bottom: 1.25rem;">Complete details and attach photos for expedited inspection.</p>
+
+              <form id="damage-report-form">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                  <div>
+                    <label class="label-caps">CATEGORY</label>
+                    <select id="dmg-category" class="input" required>
+                      <option value="house">Residential House</option>
+                      <option value="crop">Agricultural Crop</option>
+                      <option value="vehicle">Vehicle / Motor</option>
+                      <option value="livestock">Livestock / Cattle</option>
+                      <option value="infrastructure">Commercial / Shop</option>
+                      <option value="other">Other Assets</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="label-caps">SEVERITY</label>
+                    <select id="dmg-severity" class="input" required>
+                      <option value="minor">Minor Damage (< 25%)</option>
+                      <option value="moderate">Moderate Damage (25–50%)</option>
+                      <option value="severe">Severe Damage (50–75%)</option>
+                      <option value="destroyed">Total Collapse (100%)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0.75rem;">
+                  <label class="label-caps">ESTIMATED LOSS IN RUPEES (INR ₹)</label>
+                  <input type="number" id="dmg-loss" class="input" placeholder="e.g. 85000" min="0" required>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0.75rem;">
+                  <label class="label-caps">DESCRIPTION OF LOSS & ASSET DETAILS</label>
+                  <textarea id="dmg-description" class="input" rows="2" placeholder="Explain damage to boundary walls, roof, crops, electrical fixtures..." required></textarea>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                  <label class="label-caps">DAMAGE PHOTOS (UP TO 3)</label>
+                  <input type="file" id="dmg-photos-input" accept="image/*" class="input" multiple>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full">
+                  📑 Submit Claim for Verification
+                </button>
+              </form>
             </div>
 
-            <div class="health-card">
-              <span style="font-size: 1.8rem;">🚰</span>
-              <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0.5rem 0 0.25rem;">Safe Drinking Water</h3>
-              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
-                Boil water vigorously for at least 1 minute before drinking or cooking. If boiling is impossible, treat with chlorine/halogen tablets according to packet instructions.
-              </p>
-            </div>
-
-            <div class="health-card">
-              <span style="font-size: 1.8rem;">🍞</span>
-              <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0.5rem 0 0.25rem;">Food Safety & Disposal</h3>
-              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
-                Discard all food that came into contact with floodwater, including canned items with bulging, damaged, or rusted seams.
-              </p>
-            </div>
-
-            <div class="health-card">
-              <span style="font-size: 1.8rem;">⚡</span>
-              <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0.5rem 0 0.25rem;">Electrical & Gas Hazard Safety</h3>
-              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
-                Never touch electrical appliances or meters while standing in water. Have an electrician inspect flooded wiring before flipping main circuit breakers.
-              </p>
-            </div>
-
-            <div class="health-card">
-              <span style="font-size: 1.8rem;">🐍</span>
-              <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0.5rem 0 0.25rem;">Snake Bites & Wound Care</h3>
-              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
-                Floods displace reptiles and insects. Wear sturdy rubber boots and gloves when clearing debris. In case of snake bite, immobilize limb and call 108 immediately.
-              </p>
-            </div>
-
-            <div class="health-card" style="background: #FFF5F5; border-color: #FED7D7;">
-              <span style="font-size: 1.8rem;">📞</span>
-              <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0.5rem 0 0.25rem;">Official Relief Helplines</h3>
-              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Click to dial official emergency response desks:</p>
-              <div style="display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.85rem; font-weight: 600;">
-                <a href="tel:1078" style="color: #DC2626;">🚁 NDMA Flood Relief: 1078</a>
-                <a href="tel:112" style="color: #DC2626;">🚨 National Emergency: 112</a>
-                <a href="tel:108" style="color: #DC2626;">🚑 Ambulance / Medical: 108</a>
-                <a href="tel:181" style="color: #DC2626;">👩 Women Emergency: 181</a>
+            <!-- My Claims History -->
+            <div class="card">
+              <h3 class="heading-md" style="margin-bottom: 0.25rem;">My Submitted Claims</h3>
+              <p class="subtext" style="margin-bottom: 1.25rem;">Track relief assessment verification status.</p>
+              <div id="my-damage-claims-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <span class="subtext">Loading your claims...</span>
               </div>
             </div>
           </div>
@@ -964,18 +1042,14 @@
   <nav id="mobile-nav-menu" class="mobile-nav-menu">
     <a href="#overview" class="nav-tab active" data-tab="overview">📊 Overview</a>
     <a href="#map" class="nav-tab" data-tab="map">🗺️ Map</a>
-    <a href="#reports" class="nav-tab" data-tab="reports">⚠️ Reports</a>
     <a href="#alerts" class="nav-tab" data-tab="alerts">🔔 Alerts <span id="mobile-nav-alerts-badge" class="badge badge-critical" style="padding: 2px 6px; font-size: 0.7rem; display: none;"></span></a>
     <a href="#emergency" class="nav-tab" data-tab="emergency">🚨 Emergency</a>
     <a href="#safety" class="nav-tab" data-tab="safety">🛡️ Safety</a>
     <a href="#shelters" class="nav-tab" data-tab="shelters">🏠 Shelters</a>
-    <a href="#volunteers" class="nav-tab" data-tab="volunteers">🤝 Volunteers</a>
-    <a href="#recovery" class="nav-tab" data-tab="recovery">📑 Recovery</a>
+    <a href="#recovery" class="nav-tab" data-tab="recovery">📑 Recovery & First Aid</a>
     <a href="#helpline" class="nav-tab" data-tab="helpline">📞 Helpline</a>
     <hr style="border: none; border-top: 1px solid var(--border); margin: 0.5rem 0;">
-    <a href="admin.html" id="mobile-admin-link" style="padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700; color: #DC2626; display: none;">🚨 Command Center</a>
-    <a href="shelter-manager.html" id="mobile-shelter-link" style="padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700; color: #8B5CF6; display: none;">🏠 Shelter Ops</a>
-    <a href="profile.html" style="padding: 0.75rem 1rem; font-size: 1rem; font-weight: 500;">👤 Profile</a>
+    <a href="profile.html" style="padding: 0.75rem 1rem; font-size: 1rem; font-weight: 500;">👤 Profile & Logout</a>
   </nav>
 
   <!-- Mobile Bottom Tab Navigation Bar (For Native Mobile App Feel & Live Demonstration) -->
@@ -988,9 +1062,9 @@
       <span class="nav-icon">🗺️</span>
       <span class="nav-label">Map</span>
     </a>
-    <a href="#reports" class="bottom-nav-item nav-tab" data-tab="reports">
-      <span class="nav-icon">⚠️</span>
-      <span class="nav-label">Reports</span>
+    <a href="#alerts" class="bottom-nav-item nav-tab" data-tab="alerts">
+      <span class="nav-icon">🔔</span>
+      <span class="nav-label">Alerts</span>
     </a>
     <a href="#emergency" class="bottom-nav-item nav-tab" data-tab="emergency">
       <span class="nav-icon">🚨</span>
@@ -1001,8 +1075,8 @@
       <span class="nav-label">Shelters</span>
     </a>
     <a href="#recovery" class="bottom-nav-item nav-tab" data-tab="recovery">
-      <span class="nav-icon">📑</span>
-      <span class="nav-label">Recovery</span>
+      <span class="nav-icon">🩹</span>
+      <span class="nav-label">First Aid</span>
     </a>
   </nav>
 
