@@ -5,8 +5,39 @@ const EmergencyContact = require('../models/EmergencyContact');
 
 const mongoose = require('mongoose');
 
-// In-memory fallback emergency contacts store (starts EMPTY for new users)
-let inMemoryContacts = [];
+// In-memory fallback emergency contacts store with sample family contacts
+let inMemoryContacts = [
+  {
+    _id: 'c_demo_1',
+    userId: 'user_citizen_001',
+    name: 'Priya Verma',
+    relation: 'Spouse',
+    phone: '+91 98765 11223',
+    email: 'priya.verma@example.com',
+    status: 'Safe',
+    locationName: 'Gomti Nagar, Sector 4'
+  },
+  {
+    _id: 'c_demo_2',
+    userId: 'user_citizen_001',
+    name: 'Rohan Verma',
+    relation: 'Brother',
+    phone: '+91 98765 44556',
+    email: 'rohan.v@example.com',
+    status: 'Safe',
+    locationName: 'Hazratganj, Lucknow'
+  },
+  {
+    _id: 'c_demo_3',
+    userId: 'user_citizen_001',
+    name: 'Dr. Neha Kapoor',
+    relation: 'Family Physician',
+    phone: '+91 98765 77889',
+    email: 'dr.neha@cityhospital.org',
+    status: 'Standby',
+    locationName: 'Civil Hospital Zone'
+  }
+];
 
 // Get user emergency contacts
 router.get('/', authMiddleware, async (req, res) => {
@@ -18,6 +49,10 @@ router.get('/', authMiddleware, async (req, res) => {
       contacts = await EmergencyContact.find({ userId: req.user.userId });
     } else {
       contacts = inMemoryContacts.filter(c => c.userId === req.user.userId);
+      // If none for this user (e.g. testing with different token), fallback to sample demo contacts
+      if (contacts.length === 0) {
+        contacts = inMemoryContacts;
+      }
     }
 
     res.json({ success: true, contacts });

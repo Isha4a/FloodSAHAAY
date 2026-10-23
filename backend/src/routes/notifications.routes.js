@@ -5,9 +5,44 @@ const Notification = require('../models/Notification');
 
 const mongoose = require('mongoose');
 
-// In-memory fallback notifications store
+// In-memory fallback notifications store with rich sample alerts
 let inMemoryNotifications = [
-  { _id: 'n1', userId: 'system', type: 'flood_alert', title: 'HYDROMET SYSTEM ACTIVE', body: 'Real-time flood risk monitoring is active for your area.', read: false, createdAt: new Date() }
+  {
+    _id: 'n1',
+    userId: 'system',
+    type: 'flood_alert',
+    title: '🚨 HIGH RISK ADVISORY — Gomti River Basin',
+    body: 'Water level at Gomti Barrage has crossed 108.4m (Warning Level: 108.0m). Low-lying areas in Gomti Nagar and Daliganj are advised to prepare evacuation kits.',
+    read: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 15)
+  },
+  {
+    _id: 'n2',
+    userId: 'system',
+    type: 'shelter_update',
+    title: '🏠 Emergency Shelter Capacity Update',
+    body: 'Gomti Nagar Community Hall shelter is near capacity (84%). Diverting incoming evacuees to Hazratganj Relief Camp (Capacity: 62% available).',
+    read: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 45)
+  },
+  {
+    _id: 'n3',
+    userId: 'system',
+    type: 'warning',
+    title: '🚧 Road Inundation Hazard Reported',
+    body: 'Lohia Path underpass has been barricaded by traffic police due to 2.5 feet standing water. Avoid route.',
+    read: true,
+    createdAt: new Date(Date.now() - 1000 * 60 * 120)
+  },
+  {
+    _id: 'n4',
+    userId: 'system',
+    type: 'info',
+    title: '📡 SDRF & NDRF Rapid Response Units Deployed',
+    body: '3 Motor rescue boats stationed at 1090 Chauraha for immediate civilian extraction if required.',
+    read: true,
+    createdAt: new Date(Date.now() - 1000 * 60 * 240)
+  }
 ];
 
 // Get user notifications

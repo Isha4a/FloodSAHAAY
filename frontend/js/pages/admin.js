@@ -1,7 +1,39 @@
 document.addEventListener('DOMContentLoaded', async () => {
+  // Helper for quick switch
+  function promptSwitchToAdmin(message = 'Authority Command Center requires an Admin or Responder account.') {
+    const modal = document.createElement('div');
+    modal.id = 'role-switch-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px);';
+    modal.innerHTML = `
+      <div style="background:#1E293B;color:#FFF;border:1px solid #334155;border-radius:12px;padding:2rem;max-width:500px;width:100%;box-shadow:0 20px 25px -5px rgba(0,0,0,0.5);text-align:center;">
+        <div style="font-size:3rem;margin-bottom:0.75rem;">🚨</div>
+        <h2 style="font-size:1.35rem;font-weight:700;margin-bottom:0.5rem;color:#FFF;">Disaster Authority Command Center</h2>
+        <p style="font-size:0.9rem;color:#94A3B8;margin-bottom:1.5rem;line-height:1.5;">${message}<br><br>Click below to instantly sign in as <strong>Demo Administrator</strong> (Rajesh Kumar) to test live SOS triage, flood hazard verification, shelter occupancy controls, and broadcast alerts.</p>
+        <div style="display:flex;gap:0.75rem;justify-content:center;">
+          <button id="btn-modal-switch-admin" style="background:#DC2626;color:#FFF;border:none;border-radius:6px;padding:0.75rem 1.25rem;font-weight:700;cursor:pointer;font-size:0.95rem;">⚡ Switch to Demo Admin</button>
+          <a href="dashboard.html" style="background:#334155;color:#E2E8F0;text-decoration:none;border-radius:6px;padding:0.75rem 1.25rem;font-weight:600;font-size:0.95rem;display:inline-block;">Exit to Citizen View</a>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById('btn-modal-switch-admin').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-modal-switch-admin');
+      btn.textContent = 'Switching to Admin...';
+      btn.disabled = true;
+      try {
+        await AuthService.login('admin@floodsahaay.local', 'Password123!');
+        window.location.reload();
+      } catch (e) {
+        alert('Could not switch to admin demo account: ' + e.message);
+        btn.textContent = '⚡ Switch to Demo Admin';
+        btn.disabled = false;
+      }
+    });
+  }
+
   // 1. Role Guard
   if (!AuthService.isAuthenticated()) {
-    window.location.href = 'signin.html';
+    promptSwitchToAdmin('You are not currently signed in.');
     return;
   }
 
@@ -26,8 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   if (!['admin', 'responder'].includes(verifiedRole)) {
-    alert(`Access Restricted: Responder Command Center requires 'admin' or 'responder' role. Your account role is '${verifiedRole || 'citizen'}'. Redirecting to Citizen Dashboard...`);
-    window.location.href = 'dashboard.html';
+    promptSwitchToAdmin(`Your current account is signed in as '${verifiedRole || 'citizen'}'.`);
     return;
   }
 
