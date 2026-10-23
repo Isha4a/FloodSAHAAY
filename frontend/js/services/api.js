@@ -4,13 +4,10 @@ const isLocalApp = window.location.protocol === 'file:' ||
   !window.location.hostname;
 const isRenderApp = window.location.hostname.endsWith('onrender.com');
 
-// The backend serves the frontend on Render, but this also supports hosting
-// the static frontend separately (for example on Vercel).
-const API_BASE_URL = isLocalApp
-  ? 'http://localhost:5000/api'
-  : isRenderApp
-    ? '/api'
-    : 'https://floodsahaay.onrender.com/api';
+// Determine API Base URL dynamically matching current protocol and host
+const API_BASE_URL = window.location.protocol.startsWith('http')
+  ? (window.location.port === '5000' || isRenderApp ? `${window.location.origin}/api` : `${window.location.protocol}//${window.location.hostname}:5000/api`)
+  : 'http://127.0.0.1:5000/api';
 
 class ApiService {
   static async request(endpoint, options = {}) {

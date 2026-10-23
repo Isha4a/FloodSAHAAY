@@ -10,8 +10,13 @@ const server = http.createServer(app);
 // Disable Mongoose query buffering so offline mode falls back immediately without 10s timeout
 mongoose.set('bufferCommands', false);
 
-// Start Server Immediately
-server.listen(PORT, '0.0.0.0', () => {
+// Prevent unhandled errors from terminating the process
+mongoose.connection.on('error', (err) => {
+  console.warn('[DATABASE WARNING] MongoDB connection event error:', err.message);
+});
+
+// Start Server Immediately (Dual-stack IPv4/IPv6 support)
+server.listen(PORT, () => {
   console.log(`[SERVER] FloodSAHAAY backend listening on port ${PORT}`);
 });
 
