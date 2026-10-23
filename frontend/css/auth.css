@@ -78,3 +78,13 @@
   }
 }
 
+@media (max-width: 420px) {
+  .auth-form-panel {
+    padding: 1rem 0.75rem 2rem;
+  }
+
+  .auth-card .btn-demo-login {
+    min-height: 42px;
+  }
+}
+

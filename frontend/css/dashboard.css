@@ -306,6 +306,185 @@
   }
 }
 
+/* Dashboard mobile layout polish. These rules only change presentation. */
+@media (max-width: 768px) {
+  .header-nav {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    flex-wrap: nowrap;
+    gap: 0.45rem;
+  }
+
+  .header-nav .logo {
+    overflow: hidden;
+  }
+
+  .header-nav .logo span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .header-nav .nav-right {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+    justify-content: flex-end;
+  }
+
+  .header-nav .nav-right #current-location-label {
+    width: 2.15rem;
+    max-width: 2.15rem;
+    overflow: hidden;
+    padding: 0.35rem !important;
+    font-size: 0 !important;
+    text-align: center;
+  }
+
+  .header-nav .nav-right #current-location-label::before {
+    content: '\1F4CD';
+    font-size: 1rem;
+  }
+
+  .header-nav .nav-right #btn-open-donation {
+    width: 2.35rem;
+    min-width: 2.35rem;
+    padding: 0.35rem !important;
+    font-size: 0 !important;
+  }
+
+  .header-nav .nav-right #btn-open-donation::before {
+    content: '\1FAF6';
+    font-size: 1rem;
+  }
+
+  .header-nav .nav-right > a[href="profile.html"] {
+    width: 2.15rem;
+    overflow: hidden;
+    font-size: 0;
+    text-align: center;
+  }
+
+  .header-nav .nav-right > a[href="profile.html"]::before {
+    content: '\1F464';
+    font-size: 1rem;
+  }
+
+  .header-nav .nav-right .badge-live {
+    width: 1.7rem;
+    justify-content: center;
+    padding: 0.35rem;
+    font-size: 0;
+  }
+
+  .dashboard-main > .card,
+  .dashboard-sidebar > .card {
+    min-width: 0;
+  }
+
+  #tab-overview .dashboard-main > div:first-child {
+    gap: 0.75rem;
+  }
+
+  #risk-score-value {
+    font-size: clamp(3rem, 15vw, 4rem) !important;
+  }
+
+  #risk-category-label {
+    font-size: 1rem !important;
+  }
+
+  .condition-row {
+    grid-template-columns: minmax(72px, 0.9fr) minmax(48px, 0.7fr) minmax(64px, 1.8fr) minmax(28px, 0.45fr);
+    min-width: 0;
+  }
+
+  .condition-row > * {
+    min-width: 0;
+  }
+
+  .condition-label,
+  .condition-val,
+  .condition-pct {
+    overflow-wrap: anywhere;
+  }
+
+  #tab-map > div:first-child {
+    height: calc(100svh - 124px) !important;
+    min-height: 0 !important;
+  }
+
+  #main-leaflet-map {
+    min-height: 0 !important;
+  }
+
+  .shelters-layout-grid {
+    min-height: 0 !important;
+  }
+
+  .shelter-map-container,
+  #shelters-leaflet-map {
+    min-height: 45vh !important;
+    height: 45vh !important;
+  }
+
+  #tab-map .card {
+    max-width: none;
+  }
+
+  .recovery-split-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .header-nav {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .header-nav .logo {
+    gap: 0.35rem;
+    font-size: 0.98rem;
+  }
+
+  .header-nav .nav-right #current-location-label,
+  .header-nav .nav-right > a[href="profile.html"] {
+    display: none;
+  }
+
+  .dashboard-main {
+    padding: 0.75rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .checkin-action-bar {
+    gap: 0.6rem;
+  }
+
+  .btn-checkin-safe,
+  .btn-checkin-evac,
+  .btn-checkin-help {
+    min-width: 0;
+  }
+
+  .condition-row {
+    grid-template-columns: minmax(68px, 0.9fr) minmax(48px, 0.8fr) minmax(56px, 1.5fr) minmax(28px, 0.4fr);
+    gap: 0.25rem;
+    font-size: 0.74rem;
+  }
+
+  .mobile-bottom-bar {
+    height: calc(60px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  body {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 #main-leaflet-map {
   width: 100% !important;
   height: 100% !important;

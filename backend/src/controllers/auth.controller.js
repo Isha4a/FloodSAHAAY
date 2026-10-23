@@ -197,3 +197,54 @@ exports.login = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// Reset Password (email + phone verification)
+exports.resetPassword = async (req, res) => {
+  try {
+    let { email, phone, newPassword } = req.body;
+
+    if (!email || !phone || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Email, phone, and new password are required' });
+    }
+
+    email = email.toLowerCase().trim();
+    phone = phone.trim();
+
+    if (newPassword.length < 4) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 4 characters' });
+    }
+
+    const isDbConnected = mongoose.connection.readyState === 1;
+    let user;
+
+    if (isDbConnected) {
+      user = await User.findOne({ email });
+    } else {
+      user = inMemoryUsers.find(u => u.email === email);
+    }
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'No account found with this email' });
+    }
+
+    // Verify phone matches as a security check
+    const storedPhone = (user.phone || '').replace(/[\s\-\(\)]/g, '');
+    const inputPhone = phone.replace(/[\s\-\(\)]/g, '');
+    if (!storedPhone.endsWith(inputPhone.slice(-10)) && !inputPhone.endsWith(storedPhone.slice(-10))) {
+      return res.status(403).json({ success: false, message: 'Phone number does not match the account' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    if (isDbConnected) {
+      await User.findOneAndUpdate({ email }, { passwordHash });
+    } else {
+      user.passwordHash = passwordHash;
+    }
+
+    res.json({ success: true, message: 'Password reset successfully. You can now sign in.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

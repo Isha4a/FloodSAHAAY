@@ -160,4 +160,54 @@
   }
 }
 
+/* Shared small-screen layout safeguards */
+@media (max-width: 768px) {
+  .header-nav {
+    height: auto;
+    min-height: 64px;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+  }
+
+  .header-nav .logo {
+    min-width: 0;
+  }
+
+  .header-nav .logo span {
+    white-space: nowrap;
+  }
+
+  .header-nav .nav-right {
+    min-width: 0;
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .centered-layout {
+    padding: 1.25rem 0.75rem;
+  }
+
+  .card {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .header-nav {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .header-nav .nav-right {
+    gap: 0.35rem;
+  }
+
+  .header-nav .nav-right .btn {
+    min-height: 38px;
+  }
+}
+
 

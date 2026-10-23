@@ -274,3 +274,33 @@ main > section { position: relative; z-index: 1; }
   }
   .landing-intro { padding-top: 4rem; padding-bottom: 3rem; }.workflow-section { padding-bottom: 4rem; }.workflow-grid { grid-template-columns: 1fr; }.signal-section { padding: 4rem 0; }.landing-cta, .landing-footer { align-items: flex-start; flex-direction: column; }.landing-cta { padding-top: 4rem; padding-bottom: 4rem; }.landing-footer { gap: .5rem; }.section-shell { padding-left: 1rem; padding-right: 1rem; }
 }
+
+@media (max-width: 768px) {
+  .header-nav {
+    align-items: center;
+  }
+
+  .header-nav .nav-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 576px) {
+  .header-nav .nav-right {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .header-nav .nav-right .btn {
+    width: 100%;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .header-nav .nav-right a[href="pages/dashboard.html"] {
+    grid-column: 1 / -1;
+    order: 4;
+  }
+}

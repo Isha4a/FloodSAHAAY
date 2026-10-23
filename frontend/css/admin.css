@@ -199,3 +199,95 @@ body.admin-body {
   overflow: hidden;
   box-shadow: var(--shadow-xl);
 }
+
+/* Command center remains usable on tablets and phones without changing its controls. */
+@media (max-width: 960px) {
+  body.admin-body {
+    overflow: auto;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .admin-topbar {
+    height: auto;
+    min-height: var(--admin-topbar-height);
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .admin-topbar > div:first-child {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .admin-stats-grid {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.1rem;
+  }
+
+  .admin-main-container {
+    height: auto;
+    min-height: calc(100vh - 150px);
+    overflow: visible;
+    flex-direction: column;
+  }
+
+  .admin-map-pane {
+    height: 48vh;
+    min-height: 320px;
+    flex: 0 0 auto;
+  }
+
+  .admin-triage-pane {
+    width: 100%;
+    min-height: 520px;
+    height: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .admin-topbar > div:first-child,
+  .admin-topbar > div:last-child {
+    width: 100%;
+  }
+
+  .admin-topbar > div:last-child {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem !important;
+  }
+
+  .admin-topbar > div:last-child .btn {
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(110px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .admin-stat-card {
+    min-width: 0;
+  }
+
+  .triage-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-map-overlay {
+    right: 1rem;
+    max-width: calc(100% - 2rem);
+  }
+
+  .audit-modal {
+    width: calc(100% - 1rem);
+    max-height: 92vh;
+    border-radius: var(--radius-md);
+  }
+}

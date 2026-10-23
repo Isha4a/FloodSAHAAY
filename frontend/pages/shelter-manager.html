@@ -69,6 +69,32 @@
     .supply-btn.active-ok { background: #10B981; color: #FFF; border-color: #10B981; }
     .supply-btn.active-low { background: #F59E0B; color: #FFF; border-color: #F59E0B; }
     .supply-btn.active-out { background: #DC2626; color: #FFF; border-color: #DC2626; }
+
+    @media (max-width: 560px) {
+      .manager-container {
+        margin-top: 1rem;
+        padding: 0 0.75rem;
+      }
+
+      .supply-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .manager-container .card {
+        padding: 1rem;
+      }
+
+      .manager-container .card > div[style*="justify-content: space-between"] {
+        align-items: flex-start !important;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .manager-container .touch-counter-btn {
+        min-height: 56px;
+        font-size: 1.2rem;
+      }
+    }
   </style>
 </head>
 <body>
