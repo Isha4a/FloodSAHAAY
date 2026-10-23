@@ -3,117 +3,715 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FloodSAHAAY — Command center</title>
+  <title>FloodSAHAAY — Dashboard</title>
   <link rel="icon" type="image/png" href="../assets/limitlez-favicon.png">
   <link rel="stylesheet" href="../css/base.css">
   <link rel="stylesheet" href="../css/components.css">
   <link rel="stylesheet" href="../css/layout.css">
   <link rel="stylesheet" href="../css/dashboard.css">
-  <link rel="stylesheet" href="../css/premium.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS & JS for Real Interactive Maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
-<body class="dashboard-rebuild">
+<body>
+  <!-- Toast Container -->
   <div id="toast-container" class="toast-container"></div>
 
-  <header class="header-nav rebuild-header">
-    <a href="dashboard.html" class="logo" aria-label="FloodSAHAAY command center"><div class="logo-icon">~</div><span class="brand-mark"><strong>FloodSAHAAY</strong><small>tide command / live</small></span></a>
-    <button id="hamburger-btn" class="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
-    <nav class="nav-tabs" id="desktop-nav" aria-label="Command center sections">
+  <!-- Top Navigation -->
+  <header class="header-nav">
+    <div class="logo">
+      <div class="logo-icon">~</div>
+      <span>FloodSAHAAY</span>
+    </div>
+
+    <button id="hamburger-btn" class="nav-hamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <nav class="nav-tabs" id="desktop-nav">
       <a href="#overview" class="nav-tab active" data-tab="overview">Overview</a>
       <a href="#map" class="nav-tab" data-tab="map">Map</a>
-      <a href="#alerts" class="nav-tab" data-tab="alerts">Alerts <span id="nav-alerts-badge" class="badge badge-critical" style="padding:2px 6px;font-size:.7rem;display:none;"></span></a>
+      <a href="#alerts" class="nav-tab" data-tab="alerts">Alerts <span id="nav-alerts-badge" class="badge badge-critical" style="padding: 2px 6px; font-size: 0.7rem; display: none;"></span></a>
       <a href="#emergency" class="nav-tab" data-tab="emergency">Emergency</a>
       <a href="#safety" class="nav-tab" data-tab="safety">Safety</a>
       <a href="#shelters" class="nav-tab" data-tab="shelters">Shelters</a>
       <a href="#helpline" class="nav-tab" data-tab="helpline">Helpline</a>
     </nav>
-    <div class="nav-right"><span id="current-location-label" title="Click to change location">◎ Lucknow</span><a href="profile.html">Profile</a><span class="badge badge-live"><span class="badge-dot"></span> Live</span></div>
+
+    <div class="nav-right">
+      <span id="current-location-label" title="Click to change location" style="cursor: pointer; padding: 0.3rem 0.6rem; background: rgba(0,0,0,0.04); border-radius: var(--radius-sm); font-weight: 600;">📍 Lucknow</span>
+      <a href="profile.html">Profile</a>
+      <span class="badge badge-live"><span class="badge-dot"></span> Live</span>
+    </div>
   </header>
 
+  <!-- TAB CONTENT PANELS -->
   <main id="tab-container">
+    
+    <!-- 1. OVERVIEW TAB -->
     <section id="tab-overview" class="tab-panel active">
-      <div class="overview-shell">
-        <div class="overview-canvas">
-          <div class="overview-titlebar">
-            <div><div class="eyebrow">Monitoring window / active</div><h1 id="overview-location-heading">Lucknow, Uttar Pradesh</h1></div>
-            <div class="overview-time"><span id="overview-updated-time">Updated recently</span><span class="tide-chip live">Live feed</span></div>
+      <div class="dashboard-layout">
+        <div class="dashboard-main">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+            <div>
+              <p class="label-caps">MONITORING</p>
+              <h1 class="heading-lg" id="overview-location-heading">Lucknow, Uttar Pradesh</h1>
+            </div>
+            <div style="text-align: right;">
+              <span class="subtext" id="overview-updated-time">Updated recently</span>
+              <span class="badge badge-live" style="margin-left: 0.5rem;"><span class="badge-dot"></span> Live</span>
+            </div>
           </div>
 
-          <div class="overview-grid">
-            <article class="risk-hero reveal-up">
-              <div class="risk-hero-top"><div><div class="eyebrow light">Current flood risk</div><small>Regional vulnerability + live telemetry</small></div><span class="tide-chip live">Signal active</span></div>
-              <div class="risk-readout"><span id="risk-score-value">--</span><span id="risk-category-label">Fetching live data...</span></div>
-              <div class="risk-scale"><div class="risk-scale-track"><div id="risk-marker"></div></div><div class="risk-scale-labels"><span>Low</span><span>Moderate</span><span>High</span><span>Critical</span></div></div>
-              <p id="risk-trend-label">↗ Updating from live weather data...</p>
-              <div class="risk-hero-bottom"><div><small>Signal confidence</small><strong>Live weather + HVI model</strong></div><div style="text-align:right;"><small>Decision window</small><strong>Monitor continuously</strong></div></div>
-            </article>
+          <!-- Risk Score Card -->
+          <div class="card" style="margin-bottom: 2rem;">
+            <p class="label-caps" style="margin-bottom: 0.5rem;">CURRENT FLOOD RISK</p>
+            <div style="display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 1rem;">
+              <span id="risk-score-value" style="font-size: 4rem; font-weight: 800; color: var(--accent-orange); line-height: 1;">--</span>
+              <span id="risk-category-label" style="font-size: 1.2rem; color: var(--text-muted); font-weight: 600;">Fetching live data...</span>
+            </div>
 
-            <aside class="command-rail">
-              <div class="rail-card warning"><div class="eyebrow" style="color:#c25b31;">Flash flood warning</div><h3>Stay ahead of the next change.</h3><p id="warning-box-body">High flood chance within 4.2 km. Rain is expected to get heavier.</p><a href="#map" class="rail-link nav-tab" data-tab="map">Inspect on map ↗</a></div>
-              <div class="rail-card"><div class="eyebrow">Quick actions</div><div class="quick-actions"><div class="quick-action emergency nav-tab" data-tab="emergency"><span>Emergency SOS</span><b>→</b></div><div class="quick-action nav-tab" data-tab="map"><span>Live flood map</span><b>→</b></div><div class="quick-action nav-tab" data-tab="shelters"><span>Find safe shelter</span><b>→</b></div><div class="quick-action nav-tab" data-tab="safety"><span>Open safety circle</span><b>→</b></div></div></div>
-              <div class="rail-card safety-mini"><div class="tide-panel-header" style="padding:0 0 .8rem;border:0;"><div class="eyebrow">Safety circle</div><a href="#safety" class="nav-tab" data-tab="safety" style="height:auto;padding:0;color:#16896d;">View all ↗</a></div><div id="sidebar-safety-contacts"><div class="empty-mini">No contacts added yet.</div></div></div>
-            </aside>
+            <!-- Risk Gradient Scale Bar -->
+            <div style="position: relative; margin-bottom: 1.5rem;">
+              <div style="height: 10px; border-radius: 5px; background: linear-gradient(to right, var(--risk-low), var(--risk-moderate), var(--risk-high), var(--risk-critical));"></div>
+              <div id="risk-marker" style="position: absolute; top: -4px; left: 0%; transform: translateX(-50%); width: 4px; height: 18px; background: #000; border-radius: 2px; transition: left 0.8s ease;"></div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem;">
+                <span>Low</span>
+                <span>Moderate</span>
+                <span>High</span>
+                <span>Critical</span>
+              </div>
+            </div>
+
+            <p style="color: var(--accent-orange); font-size: 0.85rem; font-weight: 600;" id="risk-trend-label">↗ Updating from live weather data...</p>
           </div>
 
-          <section class="tide-panel conditions-panel">
-            <div class="tide-panel-header"><div><div class="eyebrow">Signal composition</div><h2>What is causing this risk?</h2></div><span class="tide-chip">model inputs</span></div>
-            <div class="condition-row"><span class="condition-label">Rainfall intensity</span><span class="condition-val" id="val-rainfall">-- mm/h</span><div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-rainfall" style="width:0%;"></div></div><span class="condition-pct" id="pct-rainfall">--%</span></div>
-            <div class="condition-row"><span class="condition-label">Ground moisture</span><span class="condition-val" id="val-soil">--%</span><div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-soil" style="width:0%;"></div></div><span class="condition-pct" id="pct-soil">--%</span></div>
-            <div class="condition-row"><span class="condition-label">Distance to water</span><span class="condition-val" id="val-prox">-- km</span><div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-prox" style="width:0%;"></div></div><span class="condition-pct" id="pct-prox">--%</span></div>
-          </section>
+          <!-- Contributing Conditions -->
+          <div style="margin-bottom: 2rem;">
+            <p class="label-caps" style="margin-bottom: 1rem;">WHAT'S CAUSING THIS RISK</p>
+            
+            <div class="condition-row">
+              <span class="condition-label">Rainfall</span>
+              <span class="condition-val" id="val-rainfall">-- mm/h</span>
+              <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-rainfall" style="width: 0%;"></div></div>
+              <span class="condition-pct" id="pct-rainfall">--%</span>
+            </div>
 
-          <section class="tide-panel map-preview-panel">
-            <div class="tide-panel-header"><div><div class="eyebrow">Spatial view / 01</div><h2>Risk overview map</h2></div><span class="tide-chip live">Location locked</span></div>
-            <div class="map-panel-body"><div id="overview-mini-map"></div><button id="btn-expand-map" class="btn tide-button dark">Expand map ↗</button></div>
-          </section>
+            <div class="condition-row">
+              <span class="condition-label">Ground moisture</span>
+              <span class="condition-val" id="val-soil">--%</span>
+              <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-soil" style="width: 0%;"></div></div>
+              <span class="condition-pct" id="pct-soil">--%</span>
+            </div>
 
-          <section class="tide-panel weather-panel">
-            <div class="tide-panel-header"><div><div class="eyebrow">Atmospheric telemetry</div><h2>Current weather</h2></div><span class="tide-chip">12-hour window</span></div>
-            <div class="weather-data-grid"><div class="weather-cell"><span>Temperature</span><h3 id="env-temp">--°C</h3></div><div class="weather-cell"><span>Rainfall</span><h3 id="env-rain">-- mm/h</h3></div><div class="weather-cell"><span>Humidity</span><h3 id="env-humidity">--%</h3></div><div class="weather-cell"><span>Wind</span><h3 id="env-wind">-- km/h</h3></div></div>
-            <div class="chart-wrap"><canvas id="precip-canvas" height="120" style="width:100%;"></canvas></div>
-          </section>
+            <div class="condition-row">
+              <span class="condition-label">Distance to water</span>
+              <span class="condition-val" id="val-prox">-- km</span>
+              <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-prox" style="width: 0%;"></div></div>
+              <span class="condition-pct" id="pct-prox">--%</span>
+            </div>
+          </div>
+
+          <!-- Small Interactive Overview Map -->
+          <div class="card" style="margin-bottom: 2rem; padding: 0; overflow: hidden; position: relative;">
+            <div style="padding: 1rem 1.5rem 0.5rem;">
+              <p class="label-caps">RISK OVERVIEW MAP</p>
+            </div>
+            <div id="overview-mini-map" style="width: 100%; height: 220px;"></div>
+            <button id="btn-expand-map" class="btn btn-primary btn-sm" style="position: absolute; bottom: 12px; right: 12px; z-index: 1000; box-shadow: var(--shadow-md);">
+              Expand Map →
+            </button>
+          </div>
+
+          <!-- Environmental Conditions Weather Chart -->
+          <div class="card">
+            <p class="label-caps" style="margin-bottom: 1rem;">CURRENT WEATHER</p>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+              <div><span class="subtext">TEMPERATURE</span><h3 id="env-temp">--°C</h3></div>
+              <div><span class="subtext">RAINFALL</span><h3 id="env-rain">-- mm/h</h3></div>
+              <div><span class="subtext">HUMIDITY</span><h3 id="env-humidity">--%</h3></div>
+              <div><span class="subtext">WIND</span><h3 id="env-wind">-- km/h</h3></div>
+            </div>
+            <canvas id="precip-canvas" height="120" style="width: 100%;"></canvas>
+          </div>
+
+        </div>
+
+        <!-- Sidebar -->
+        <div class="dashboard-sidebar">
+          <!-- Flash Flood Warning Box -->
+          <div class="card" style="border-left: 4px solid var(--accent-orange); margin-bottom: 1.5rem; background: #FFF9F5;">
+            <p class="label-caps" style="color: var(--accent-orange-hover);">FLASH FLOOD WARNING</p>
+            <p style="font-size: 0.9rem; font-weight: 600; margin: 0.5rem 0;" id="warning-box-body">High flood chance within 4.2 km. Rain is expected to get heavier.</p>
+            <a href="#map" class="nav-tab" data-tab="map" style="color: var(--accent-orange-hover); font-size: 0.85rem; font-weight: 600;">View on map →</a>
+          </div>
+
+          <!-- Quick Access -->
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <p class="label-caps" style="margin-bottom: 0.75rem;">QUICK ACCESS</p>
+            <div class="quick-link-row emergency-sos-row nav-tab" data-tab="emergency" style="background: var(--accent-red-light); color: var(--accent-red);">
+              <span>🚨 Emergency SOS</span> <span>›</span>
+            </div>
+            <div class="quick-link-row nav-tab" data-tab="map"><span>Live flood map</span> <span>›</span></div>
+            <div class="quick-link-row nav-tab" data-tab="shelters"><span>Evacuation shelters</span> <span>›</span></div>
+            <div class="quick-link-row nav-tab" data-tab="safety"><span>Safety Circle</span> <span>›</span></div>
+          </div>
+
+          <!-- Safety Circle Quick View -->
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <p class="label-caps">SAFETY CIRCLE</p>
+              <a href="#safety" class="nav-tab" data-tab="safety" style="font-size: 0.8rem; color: var(--accent-green-dark);">View all</a>
+            </div>
+            <div id="sidebar-safety-contacts"></div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section id="tab-map" class="tab-panel"><div class="map-stage"><div id="main-leaflet-map"></div><div class="map-hud"><div class="eyebrow">Selected location / risk signal</div><h2 id="map-info-area">Gomti Nagar, Lucknow</h2><div class="map-hud-score"><span id="map-info-score">--</span><span class="subtext">/ 100</span><span id="map-info-badge" class="badge badge-high" style="margin-left:auto;">High risk</span></div><p id="map-info-details" class="subtext">Fetching live risk data...</p><p class="subtext" style="margin-top:.8rem;font-size:.7rem;">Click anywhere on the map or use the location chip to move the monitoring window.</p></div></div></section>
+    <!-- 2. MAP TAB -->
+    <section id="tab-map" class="tab-panel">
+      <div style="position: relative; width: 100%; height: calc(100vh - 64px); min-height: 540px;">
+        <div id="main-leaflet-map" style="width: 100%; height: 100%; min-height: 540px;"></div>
+        
+        <!-- Floating Risk Info Panel -->
+        <div class="card" style="position: absolute; top: 1.5rem; left: 1.5rem; z-index: 1000; width: 320px; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(8px); box-shadow: var(--shadow-lg);">
+          <p class="label-caps">SELECTED LOCATION RISK INFO</p>
+          <h3 id="map-info-area" style="margin: 0.25rem 0 0.5rem;">Gomti Nagar, Lucknow</h3>
+          <div style="display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <span id="map-info-score" style="font-size: 2.2rem; font-weight: 800; color: var(--accent-orange);">--</span>
+            <span class="subtext">/ 100</span>
+            <span id="map-info-badge" class="badge badge-high" style="margin-left: auto;">High risk</span>
+          </div>
+          <p id="map-info-details" class="subtext" style="font-size: 0.82rem;">Fetching live risk data...</p>
+          <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.5rem;">💡 Click anywhere on map or search above to select a location.</p>
+        </div>
+      </div>
+    </section>
 
-    <section id="tab-alerts" class="tab-panel"><div class="tab-frame alerts-list-shell"><div class="tab-frame-title"><div><div class="eyebrow">Signal log / notifications</div><h2>Active alerts.</h2></div><button id="mark-all-read-btn" class="btn tide-button ghost">Mark all as read</button></div><div id="alerts-empty-state" class="tide-panel" style="text-align:center;padding:4rem 1.5rem;display:none;"><div style="font-size:2.5rem;margin-bottom:1rem;">◌</div><h3 class="heading-md">No active alerts</h3><p class="subtext">Everything looks safe in your monitoring window right now.</p></div><div id="alerts-list"></div></div></section>
+    <!-- 3. ALERTS TAB -->
+    <section id="tab-alerts" class="tab-panel">
+      <div style="max-width: 800px; margin: 2rem auto; padding: 0 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h2 class="heading-lg">Active Alerts</h2>
+          <button id="mark-all-read-btn" class="btn btn-secondary btn-sm">Mark all as read</button>
+        </div>
+        
+        <!-- Empty State Container -->
+        <div id="alerts-empty-state" class="card" style="text-align: center; padding: 3rem 1.5rem; display: none;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🛡️</div>
+          <h3 class="heading-md" style="margin-bottom: 0.5rem;">No active alerts</h3>
+          <p class="subtext">Everything looks safe in your area right now.</p>
+        </div>
 
-    <section id="tab-emergency" class="tab-panel"><div class="emergency-layout"><div class="emergency-stage"><div class="eyebrow">Emergency protocol / hold to activate</div><button id="sos-hold-btn" class="sos-btn"><span style="font-size:2rem;font-weight:900;color:inherit;">SOS</span><span style="font-size:.72rem;opacity:.8;color:inherit;letter-spacing:.12em;">HOLD</span></button><p class="subtext" style="max-width:360px;">Hold for 2 seconds to confirm. Your live coordinates will be dispatched to registered emergency contacts.</p><div class="tide-panel mesh-console"><div class="tide-panel-header"><div><div class="eyebrow">Offline mesh / 300–400m</div><h2>People near you.</h2></div><span class="tide-chip live">Radio active</span></div><div class="tide-panel-body"><p class="subtext" style="font-size:.8rem;margin-bottom:1rem;">When mobile networks disappear, nearby phones can still discover peers, relay signals, and send a distress beacon.</p><div id="mesh-peers-container"><div class="mesh-peer"><span><strong>Person nearby</strong><small>120m away · Safe · Node FS-942</small></span><button class="btn tide-button ghost btn-sm btn-mesh-ping" data-peer="FS-942">Connect</button></div><div class="mesh-peer"><span><strong style="color:#d7433e;">Person needs help</strong><small>280m away · Contact immediately · Node FS-318</small></span><button class="btn tide-button dark btn-sm btn-mesh-ping" data-peer="FS-318">Connect</button></div><div class="mesh-peer"><span><strong>Signal relay point</strong><small>380m away · Helping connect people</small></span><span class="tide-chip live">Relay</span></div></div><div class="mesh-actions"><button id="btn-broadcast-beacon" class="btn tide-button dark btn-sm" style="flex:1;">Send help signal ↗</button><button id="btn-scan-mesh" class="btn tide-button ghost btn-sm">Scan nearby</button></div></div></div></div><aside class="tab-sidebar"><div class="eyebrow">Trusted response network</div><h3>Emergency contacts</h3><div id="emergency-contacts-list" style="margin-bottom:1rem;"></div><button id="add-contact-btn" class="btn tide-button ghost btn-full">+ Add contact</button></aside></div></section>
+        <div id="alerts-list"></div>
+      </div>
+    </section>
 
-    <section id="tab-safety" class="tab-panel"><div class="safety-layout"><div class="safety-people"><div class="tab-frame-title"><div><div class="eyebrow">Safety circle / people</div><h2>Your people.</h2><p class="subtext">Stay connected when the conditions change.</p></div><button id="btn-invite-safety" class="btn tide-button primary">+ Invite</button></div><div id="safety-people-list"></div></div><aside class="safety-map"><div id="safety-leaflet-map"></div></aside></div></section>
+    <!-- 4. EMERGENCY TAB -->
+    <section id="tab-emergency" class="tab-panel">
+      <div class="dashboard-layout">
+        <div class="dashboard-main" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 2rem;">
+          <p class="label-caps" style="margin-bottom: 1.5rem;">PRESS AND HOLD TO SEND SOS</p>
+          
+          <button id="sos-hold-btn" class="sos-btn">
+            <span style="font-size: 1.8rem; font-weight: 800; color: inherit;">SOS</span>
+            <span style="font-size: 0.75rem; opacity: 0.8; color: inherit;">HOLD</span>
+          </button>
 
-    <section id="tab-shelters" class="tab-panel"><div class="shelter-layout"><div class="shelter-map"><div id="shelters-leaflet-map"></div></div><aside class="tab-sidebar shelter-sidebar"><div class="eyebrow">Evacuation network</div><h2 style="margin:.4rem 0 .3rem;font-size:1.8rem;letter-spacing:-.07em;">Safe shelters.</h2><p class="subtext" style="margin-bottom:1.3rem;">Nearest first · Shows available space</p><div id="shelters-list"></div></aside></div></section>
+          <p class="subtext" style="margin-top: 1.5rem; max-width: 340px; font-size: 0.88rem;">
+            Hold for 2 seconds to activate. Your live GPS coordinates will be dispatched to all emergency contacts.
+          </p>
 
-    <section id="tab-helpline" class="tab-panel"><div class="tab-frame"><div class="tab-frame-title"><div><div class="eyebrow">Response directory / official lines</div><h2>Call when it matters.</h2><p class="subtext" style="max-width:570px;margin-top:.5rem;">Official 24/7 numbers for rescue, medical help, disaster relief, police, fire, and humanitarian support.</p></div></div><div class="helpline-grid">
-      <div class="card helpline-card"><div class="helpline-card-header"><div class="helpline-icon">◈</div><div><span class="badge badge-high">Disaster rescue</span><h3>NDRF Control Room</h3></div></div><p>Dedicated flood rescue, evacuation, and swift-water response teams across India.</p><div class="helpline-number-box"><span class="helpline-number">011-24363260</span><span class="subtext">24 / 7</span></div><div class="helpline-btn-group"><button class="btn tide-button ghost btn-sm btn-copy-helpline" data-number="01124363260">Copy number</button><a href="tel:01124363260" class="btn tide-button dark btn-sm">Call now</a></div></div>
-      <div class="card helpline-card"><div class="helpline-card-header"><div class="helpline-icon">!</div><div><span class="badge badge-critical">National toll-free</span><h3>National Emergency</h3></div></div><p>Unified emergency response number for police, fire, ambulance, and disaster services.</p><div class="helpline-number-box"><span class="helpline-number">112</span><span class="subtext">Toll-free / 24x7</span></div><div class="helpline-btn-group"><button class="btn tide-button ghost btn-sm btn-copy-helpline" data-number="112">Copy number</button><a href="tel:112" class="btn tide-button danger btn-sm">Call 112</a></div></div>
-      <div class="card helpline-card"><div class="helpline-card-header"><div class="helpline-icon">⌂</div><div><span class="badge badge-live">State authority</span><h3>State Disaster Management</h3></div></div><p>Regional flood warnings, relief camps, and emergency supplies dispatch.</p><div class="helpline-number-box"><span class="helpline-number">1078</span><span class="subtext">Control room</span></div><div class="helpline-btn-group"><button class="btn tide-button ghost btn-sm btn-copy-helpline" data-number="1078">Copy number</button><a href="tel:1078" class="btn tide-button dark btn-sm">Call now</a></div></div>
-      <div class="card helpline-card"><div class="helpline-card-header"><div class="helpline-icon">≈</div><div><span class="badge badge-high">Flood advisory</span><h3>District Flood Control</h3></div></div><p>River-level updates, embankment breach reporting, and local evacuation assistance.</p><div class="helpline-number-box"><span class="helpline-number">1070</span><span class="subtext">Toll-free</span></div><div class="helpline-btn-group"><button class="btn tide-button ghost btn-sm btn-copy-helpline" data-number="1070">Copy number</button><a href="tel:1070" class="btn tide-button dark btn-sm">Call now</a></div></div>
-      <div class="card helpline-card"><div class="helpline-card-header"><div class="helpline-icon">+</div><div><span class="badge badge-live">Medical</span><h3>Health & ambulance</h3></div></div><p>Emergency medical transport, trauma care, and ambulance dispatch.</p><div class="helpline-number-box"><span class="helpline-number">108</span><span class="subtext">24 / 7 ambulance</span></div><div class="helpline-btn-group"><button class="btn tide-button ghost btn-sm btn-copy-helpline" data-number="108">Copy number</button><a href="tel:108" class="btn tide-button dark btn-sm">Call 108</a></div></div>
-      <div class="card helpline-card"><div class="helpline-card-header"><div class="helpline-icon">□</div><div><span class="badge badge-live">Security</span><h3>Police assistance</h3></div></div><p>Security deployment, evacuation support, and missing-person assistance.</p><div class="helpline-number-box"><span class="helpline-number">100</span><span class="subtext">Police control</span></div><div class="helpline-btn-group"><button class="btn tide-button ghost btn-sm btn-copy-helpline" data-number="100">Copy number</button><a href="tel:100" class="btn tide-button dark btn-sm">Call 100</a></div></div>
-      <div class="card helpline-card"><div class="helpline-card-header"><div class="helpline-icon">△</div><div><span class="badge badge-high">Rescue ops</span><h3>Fire & rescue services</h3></div></div><p>Heavy rescue gear, pumping assistance, and fire response during inundation.</p><div class="helpline-number-box"><span class="helpline-number">101</span><span class="subtext">Fire station</span></div><div class="helpline-btn-group"><button class="btn tide-button ghost btn-sm btn-copy-helpline" data-number="101">Copy number</button><a href="tel:101" class="btn tide-button dark btn-sm">Call 101</a></div></div>
-      <div class="card helpline-card"><div class="helpline-card-header"><div class="helpline-icon">♥</div><div><span class="badge badge-live">Humanitarian aid</span><h3>Indian Red Cross</h3></div></div><p>Medical kits, drinking water, food packs, and temporary shelter support.</p><div class="helpline-number-box"><span class="helpline-number">011-23716441</span><span class="subtext">Headquarters</span></div><div class="helpline-btn-group"><button class="btn tide-button ghost btn-sm btn-copy-helpline" data-number="01123716441">Copy number</button><a href="tel:01123716441" class="btn tide-button dark btn-sm">Call now</a></div></div>
-    </div></div></section>
+          <!-- 300m - 400m Nearby Emergency Mesh Network Card -->
+          <div class="card" style="width: 100%; max-width: 580px; margin-top: 2rem; text-align: left; border: 1px solid var(--border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <div>
+                <span class="label-caps" style="color: var(--accent-orange-hover);">NO MOBILE NETWORK? YOU CAN STILL CONNECT</span>
+                <h3 class="heading-md" style="font-size: 1.1rem; margin-top: 0.2rem;">People Near You (within 300–400m)</h3>
+              </div>
+              <span class="badge badge-live"><span class="badge-dot"></span> Active</span>
+            </div>
+
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
+              🆘 Stay connected even when there is no mobile network. Your phone can connect with people nearby and send emergency messages.
+            </p>
+
+            <!-- Active Peers Container -->
+            <div id="mesh-peers-container" style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.25rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <span style="font-size: 1.2rem;">👤</span>
+                  <div>
+                    <strong style="font-size: 0.88rem;">Person Nearby</strong>
+                    <p class="subtext" style="font-size: 0.76rem;">120m away · Safe</p>
+                  </div>
+                </div>
+                <button class="btn btn-secondary btn-sm btn-mesh-ping" data-peer="FS-942">Connect</button>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <span style="font-size: 1.2rem;">🚨</span>
+                  <div>
+                    <strong style="font-size: 0.88rem; color: var(--accent-red);">Person Needs Help</strong>
+                    <p class="subtext" style="font-size: 0.76rem;">280m away · Contact immediately</p>
+                  </div>
+                </div>
+                <button class="btn btn-primary btn-sm btn-mesh-ping" data-peer="FS-318">Connect</button>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card-muted); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <span style="font-size: 1.2rem;">📡</span>
+                  <div>
+                    <strong style="font-size: 0.88rem;">Signal Relay Point</strong>
+                    <p class="subtext" style="font-size: 0.76rem;">380m away · Helping connect people</p>
+                  </div>
+                </div>
+                <span class="badge badge-live" style="font-size: 0.7rem;">Relay</span>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+              <button id="btn-broadcast-beacon" class="btn btn-primary btn-sm" style="flex: 1;">📡 Send Help Signal (300m)</button>
+              <button id="btn-scan-mesh" class="btn btn-secondary btn-sm">⚡ Find People Nearby</button>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="dashboard-sidebar">
+          <h3 class="heading-md" style="margin-bottom: 1rem;">Emergency Contacts</h3>
+          <div id="emergency-contacts-list" style="margin-bottom: 1.5rem;"></div>
+          <button id="add-contact-btn" class="btn btn-secondary btn-full">+ Add contact</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. SAFETY TAB -->
+    <section id="tab-safety" class="tab-panel">
+      <div class="dashboard-layout">
+        <div class="dashboard-main">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div>
+              <h2 class="heading-lg">Your people</h2>
+              <p class="subtext">Stay connected when conditions change.</p>
+            </div>
+            <button id="btn-invite-safety" class="btn btn-primary">+ Invite</button>
+          </div>
+          <div id="safety-people-list"></div>
+        </div>
+        <div class="dashboard-sidebar" style="padding: 0;">
+          <div id="safety-leaflet-map" style="width: 100%; height: 100%; min-height: 400px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. SHELTERS TAB -->
+    <section id="tab-shelters" class="tab-panel">
+      <div class="dashboard-layout shelters-layout-grid">
+        <div class="dashboard-main shelter-map-container" style="padding: 0;">
+          <div id="shelters-leaflet-map" style="width: 100%; height: 100%; min-height: calc(100vh - 64px);"></div>
+        </div>
+        <div class="dashboard-sidebar">
+          <h3 class="heading-md">Nearby safe shelters</h3>
+          <p class="subtext" style="margin-bottom: 1.5rem;">Nearest first · Shows available space</p>
+          <div id="shelters-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. HELPLINE TAB -->
+    <section id="tab-helpline" class="tab-panel">
+      <div style="max-width: 1080px; margin: 2rem auto; padding: 0 1.25rem;">
+        <div style="margin-bottom: 2rem;">
+          <p class="label-caps" style="color: var(--accent-orange-hover);">EMERGENCY PHONE NUMBERS</p>
+          <h2 class="heading-lg" style="margin-top: 0.25rem;">Government Emergency Helplines</h2>
+          <p class="subtext" style="margin-top: 0.25rem;">
+            Official 24/7 numbers for flood rescue, medical help, disaster relief, and police. Click any button to copy the number.
+          </p>
+        </div>
+
+        <div class="helpline-grid">
+          <!-- Card 1: NDRF -->
+          <div class="card helpline-card">
+            <div class="helpline-card-header">
+              <div class="helpline-icon">🚁</div>
+              <div>
+                <span class="badge badge-high" style="margin-bottom: 0.25rem;">Disaster Rescue</span>
+                <h3 style="font-size: 1.1rem; font-weight: 700;">National Disaster Response Force (NDRF)</h3>
+              </div>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0;">
+              Dedicated flood rescue operations, evacuation, and swift water disaster response teams across India.
+            </p>
+            <div class="helpline-number-box">
+              <span class="helpline-number">011-24363260</span>
+              <span class="subtext" style="font-size: 0.75rem; margin-left: auto;">24/7 Control Room</span>
+            </div>
+            <div class="helpline-btn-group">
+              <button class="btn btn-secondary btn-sm btn-copy-helpline" data-number="01124363260">
+                📋 Copy Number
+              </button>
+              <a href="tel:01124363260" class="btn btn-primary btn-sm">
+                📞 Call Now
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 2: National Emergency 112 -->
+          <div class="card helpline-card" style="border-left: 4px solid var(--accent-red);">
+            <div class="helpline-card-header">
+              <div class="helpline-icon" style="background: #FFEBE9;">🚨</div>
+              <div>
+                <span class="badge badge-critical" style="margin-bottom: 0.25rem;">National Toll-Free</span>
+                <h3 style="font-size: 1.1rem; font-weight: 700;">National Emergency Number</h3>
+              </div>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0;">
+              Single unified emergency response number for Police, Fire, Ambulance & Disaster Services nationwide.
+            </p>
+            <div class="helpline-number-box">
+              <span class="helpline-number" style="color: var(--accent-red); font-size: 1.5rem;">112</span>
+              <span class="subtext" style="font-size: 0.75rem; margin-left: auto;">Toll-Free · 24x7</span>
+            </div>
+            <div class="helpline-btn-group">
+              <button class="btn btn-secondary btn-sm btn-copy-helpline" data-number="112">
+                📋 Copy Number
+              </button>
+              <a href="tel:112" class="btn btn-danger btn-sm">
+                🚨 Call 112
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 3: SDMA -->
+          <div class="card helpline-card">
+            <div class="helpline-card-header">
+              <div class="helpline-icon">🏛️</div>
+              <div>
+                <span class="badge badge-live" style="margin-bottom: 0.25rem;">State Govt Authority</span>
+                <h3 style="font-size: 1.1rem; font-weight: 700;">State Disaster Management (SDMA)</h3>
+              </div>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0;">
+              State emergency operation center for regional flood warnings, relief camps, and emergency supplies dispatch.
+            </p>
+            <div class="helpline-number-box">
+              <span class="helpline-number">1078</span>
+              <span class="subtext" style="font-size: 0.75rem; margin-left: auto;">State Control Room</span>
+            </div>
+            <div class="helpline-btn-group">
+              <button class="btn btn-secondary btn-sm btn-copy-helpline" data-number="1078">
+                📋 Copy Number
+              </button>
+              <a href="tel:1078" class="btn btn-primary btn-sm">
+                📞 Call Now
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 4: Flood Control Room -->
+          <div class="card helpline-card">
+            <div class="helpline-card-header">
+              <div class="helpline-icon">🌊</div>
+              <div>
+                <span class="badge badge-high" style="margin-bottom: 0.25rem;">Flood Advisory</span>
+                <h3 style="font-size: 1.1rem; font-weight: 700;">District Flood Control Helpline</h3>
+              </div>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0;">
+              Real-time river level updates, embankment breach reporting, and local community evacuation assistance.
+            </p>
+            <div class="helpline-number-box">
+              <span class="helpline-number">1070</span>
+              <span class="subtext" style="font-size: 0.75rem; margin-left: auto;">Toll-Free Control Room</span>
+            </div>
+            <div class="helpline-btn-group">
+              <button class="btn btn-secondary btn-sm btn-copy-helpline" data-number="1070">
+                📋 Copy Number
+              </button>
+              <a href="tel:1070" class="btn btn-primary btn-sm">
+                📞 Call Now
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 5: Medical Ambulance -->
+          <div class="card helpline-card">
+            <div class="helpline-card-header">
+              <div class="helpline-icon" style="background: #E8F5E9;">🚑</div>
+              <div>
+                <span class="badge badge-live" style="margin-bottom: 0.25rem;">Medical Emergency</span>
+                <h3 style="font-size: 1.1rem; font-weight: 700;">National Health & Ambulance Service</h3>
+              </div>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0;">
+              Emergency medical transport, trauma care, and boat-ambulance dispatch in flooded submergence zones.
+            </p>
+            <div class="helpline-number-box">
+              <span class="helpline-number">108</span>
+              <span class="subtext" style="font-size: 0.75rem; margin-left: auto;">24/7 Ambulance</span>
+            </div>
+            <div class="helpline-btn-group">
+              <button class="btn btn-secondary btn-sm btn-copy-helpline" data-number="108">
+                📋 Copy Number
+              </button>
+              <a href="tel:108" class="btn btn-primary btn-sm">
+                📞 Call 108
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 6: Police Assistance -->
+          <div class="card helpline-card">
+            <div class="helpline-card-header">
+              <div class="helpline-icon" style="background: #EBF3FE;">🛡️</div>
+              <div>
+                <span class="badge badge-live" style="margin-bottom: 0.25rem;">Security & Law</span>
+                <h3 style="font-size: 1.1rem; font-weight: 700;">Police & Security Helpline</h3>
+              </div>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0;">
+              Immediate security deployment, law enforcement during evacuations, and missing person search assistance.
+            </p>
+            <div class="helpline-number-box">
+              <span class="helpline-number">100</span>
+              <span class="subtext" style="font-size: 0.75rem; margin-left: auto;">Police Control</span>
+            </div>
+            <div class="helpline-btn-group">
+              <button class="btn btn-secondary btn-sm btn-copy-helpline" data-number="100">
+                📋 Copy Number
+              </button>
+              <a href="tel:100" class="btn btn-primary btn-sm">
+                📞 Call 100
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 7: Fire & Rescue -->
+          <div class="card helpline-card">
+            <div class="helpline-card-header">
+              <div class="helpline-icon" style="background: #FFF3E0;">🚒</div>
+              <div>
+                <span class="badge badge-high" style="margin-bottom: 0.25rem;">Rescue Ops</span>
+                <h3 style="font-size: 1.1rem; font-weight: 700;">Fire & Disaster Rescue Services</h3>
+              </div>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0;">
+              Heavy rescue gear, building collapse response, and water pumping assistance during heavy inundation.
+            </p>
+            <div class="helpline-number-box">
+              <span class="helpline-number">101</span>
+              <span class="subtext" style="font-size: 0.75rem; margin-left: auto;">Fire Station Desk</span>
+            </div>
+            <div class="helpline-btn-group">
+              <button class="btn btn-secondary btn-sm btn-copy-helpline" data-number="101">
+                📋 Copy Number
+              </button>
+              <a href="tel:101" class="btn btn-primary btn-sm">
+                📞 Call 101
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 8: Red Cross Relief -->
+          <div class="card helpline-card">
+            <div class="helpline-card-header">
+              <div class="helpline-icon" style="background: #FFEBEE;">❤️</div>
+              <div>
+                <span class="badge badge-live" style="margin-bottom: 0.25rem;">Humanitarian Aid</span>
+                <h3 style="font-size: 1.1rem; font-weight: 700;">Indian Red Cross Disaster Relief</h3>
+              </div>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.75rem 0;">
+              Emergency medical kits, clean drinking water distribution, food ration packs, and temporary shelter kits.
+            </p>
+            <div class="helpline-number-box">
+              <span class="helpline-number">011-23716441</span>
+              <span class="subtext" style="font-size: 0.75rem; margin-left: auto;">Relief Headquarters</span>
+            </div>
+            <div class="helpline-btn-group">
+              <button class="btn btn-secondary btn-sm btn-copy-helpline" data-number="01123716441">
+                📋 Copy Number
+              </button>
+              <a href="tel:01123716441" class="btn btn-primary btn-sm">
+                📞 Call Now
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
+  <!-- Mobile Nav Overlay & Menu -->
   <div id="mobile-nav-overlay" class="mobile-nav-overlay"></div>
-  <nav id="mobile-nav-menu" class="mobile-nav-menu"><div class="eyebrow light" style="padding:.4rem .8rem 1rem;">Tide command</div><a href="#overview" class="nav-tab active" data-tab="overview">Overview</a><a href="#map" class="nav-tab" data-tab="map">Map</a><a href="#alerts" class="nav-tab" data-tab="alerts">Alerts <span id="mobile-nav-alerts-badge" class="badge badge-critical" style="padding:2px 6px;font-size:.7rem;display:none;"></span></a><a href="#emergency" class="nav-tab" data-tab="emergency">Emergency</a><a href="#safety" class="nav-tab" data-tab="safety">Safety</a><a href="#shelters" class="nav-tab" data-tab="shelters">Shelters</a><a href="#helpline" class="nav-tab" data-tab="helpline">Helpline</a><hr style="border:none;border-top:1px solid rgba(121,228,196,.16);margin:.5rem 0;"><a href="profile.html" style="padding:.75rem .8rem;font-size:1rem;font-weight:700;color:#eafff8;">Profile ↗</a></nav>
-  <nav id="mobile-bottom-bar" class="mobile-bottom-bar"><a href="#overview" class="bottom-nav-item active nav-tab" data-tab="overview"><span class="nav-icon">◌</span><span class="nav-label">Overview</span></a><a href="#map" class="bottom-nav-item nav-tab" data-tab="map"><span class="nav-icon">⌖</span><span class="nav-label">Map</span></a><a href="#alerts" class="bottom-nav-item nav-tab" data-tab="alerts"><span class="nav-icon">!</span><span class="nav-label">Alerts</span></a><a href="#emergency" class="bottom-nav-item nav-tab" data-tab="emergency"><span class="nav-icon">SOS</span><span class="nav-label">Emergency</span></a><a href="#shelters" class="bottom-nav-item nav-tab" data-tab="shelters"><span class="nav-icon">⌂</span><span class="nav-label">Shelters</span></a></nav>
+  <nav id="mobile-nav-menu" class="mobile-nav-menu">
+    <a href="#overview" class="nav-tab active" data-tab="overview">📊 Overview</a>
+    <a href="#map" class="nav-tab" data-tab="map">🗺️ Map</a>
+    <a href="#alerts" class="nav-tab" data-tab="alerts">🔔 Alerts <span id="mobile-nav-alerts-badge" class="badge badge-critical" style="padding: 2px 6px; font-size: 0.7rem; display: none;"></span></a>
 
-  <div id="location-modal" class="modal-backdrop"><div class="modal-content"><div class="modal-head"><div><div class="eyebrow">Monitoring window</div><h3 class="heading-md">Move the signal.</h3></div><button id="close-location-modal" class="modal-close">×</button></div><div class="form-group" style="position:relative;"><label class="form-label" for="modal-search-input">Search a place</label><input type="text" id="modal-search-input" class="form-input" placeholder="City, area or pincode"><div id="modal-search-results" class="card" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:10;margin-top:4px;padding:.5rem 0;max-height:200px;overflow-y:auto;"></div></div><button id="modal-gps-btn" class="btn tide-button dark btn-full" style="margin-bottom:1.5rem;">Use current GPS position ◎</button><div class="eyebrow" style="margin-bottom:.7rem;">Quick locations</div><div class="quick-location-list"><div class="modal-quick-loc" data-name="Lucknow, Uttar Pradesh" data-lat="26.8467" data-lng="80.9462">◎ Lucknow, Uttar Pradesh</div><div class="modal-quick-loc" data-name="Guwahati, Assam" data-lat="26.1445" data-lng="91.7362">◎ Guwahati, Assam</div><div class="modal-quick-loc" data-name="Silchar, Assam" data-lat="24.8333" data-lng="92.7789">◎ Silchar, Assam</div><div class="modal-quick-loc" data-name="New Delhi, Delhi" data-lat="28.6139" data-lng="77.2090">◎ New Delhi</div><div class="modal-quick-loc" data-name="Mumbai, Maharashtra" data-lat="19.0760" data-lng="72.8777">◎ Mumbai, Maharashtra</div><div class="modal-quick-loc" data-name="Kolkata, West Bengal" data-lat="22.5726" data-lng="88.3639">◎ Kolkata, West Bengal</div><div class="modal-quick-loc" data-name="Patna, Bihar" data-lat="25.5941" data-lng="85.1376">◎ Patna, Bihar</div></div></div></div>
+    <a href="#emergency" class="nav-tab" data-tab="emergency">🚨 Emergency</a>
+    <a href="#safety" class="nav-tab" data-tab="safety">🛡️ Safety</a>
+    <a href="#shelters" class="nav-tab" data-tab="shelters">🏠 Shelters</a>
+    <a href="#helpline" class="nav-tab" data-tab="helpline">📞 Helpline</a>
+    <hr style="border: none; border-top: 1px solid var(--border); margin: 0.5rem 0;">
+    <a href="profile.html" style="padding: 0.75rem 1rem; font-size: 1rem; font-weight: 500;">👤 Profile</a>
+  </nav>
 
-  <div id="add-contact-modal" class="modal-backdrop"><div class="modal-content"><div class="modal-head"><div><div class="eyebrow">Trusted network</div><h3 class="heading-md" id="contact-modal-title">Add emergency contact</h3></div><button id="close-contact-modal" class="modal-close">×</button></div><form id="add-contact-form"><input type="hidden" id="contact-edit-id" value=""><div class="form-group"><label class="form-label" for="contact-name">Full name</label><input type="text" id="contact-name" class="form-input" placeholder="e.g. Robert Johnson" required></div><div class="form-group"><label class="form-label" for="contact-relation">Relationship</label><input type="text" id="contact-relation" class="form-input" placeholder="e.g. Father, spouse, friend" required></div><div class="form-group"><label class="form-label" for="contact-phone">Phone number</label><input type="tel" id="contact-phone" class="form-input" placeholder="+91 98765 11111" required></div><div class="form-group"><label class="form-label" for="contact-email">Email (optional)</label><input type="email" id="contact-email" class="form-input" placeholder="contact@example.com"></div><button type="submit" class="btn tide-button dark btn-full" id="contact-submit-btn">Save contact</button></form></div></div>
+  <!-- Mobile Bottom Tab Navigation Bar (For Native Mobile App Feel & Live Demonstration) -->
+  <nav id="mobile-bottom-bar" class="mobile-bottom-bar">
+    <a href="#overview" class="bottom-nav-item active nav-tab" data-tab="overview">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Overview</span>
+    </a>
+    <a href="#map" class="bottom-nav-item nav-tab" data-tab="map">
+      <span class="nav-icon">🗺️</span>
+      <span class="nav-label">Map</span>
+    </a>
+    <a href="#alerts" class="bottom-nav-item nav-tab" data-tab="alerts">
+      <span class="nav-icon">🔔</span>
+      <span class="nav-label">Alerts</span>
+    </a>
+    <a href="#emergency" class="bottom-nav-item nav-tab" data-tab="emergency">
+      <span class="nav-icon">🚨</span>
+      <span class="nav-label">SOS</span>
+    </a>
+    <a href="#shelters" class="bottom-nav-item nav-tab" data-tab="shelters">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Shelters</span>
+    </a>
+    <a href="#helpline" class="bottom-nav-item nav-tab" data-tab="helpline">
+      <span class="nav-icon">📞</span>
+      <span class="nav-label">Helpline</span>
+    </a>
+  </nav>
 
-  <div id="sos-modal" class="modal-backdrop"><div class="modal-content sos-confirm-modal"><div class="sos-confirm-icon">!</div><div class="eyebrow" style="color:#d7433e;">Emergency confirmation</div><h3 class="heading-md">Confirm SOS dispatch?</h3><p>You are about to share your live location (<strong id="sos-modal-location">Lucknow</strong>) with all registered emergency contacts.</p><div class="sos-confirm-note">Your emergency broadcast will be marked active immediately.</div><div class="modal-actions"><button id="btn-cancel-sos" class="btn tide-button ghost btn-full">Cancel</button><button id="btn-confirm-sos" class="btn tide-button danger btn-full">Confirm & send</button></div></div></div>
+  <!-- MODALS -->
 
-  <div id="invite-modal" class="modal-backdrop"><div class="modal-content"><div class="modal-head"><div><div class="eyebrow">Safety circle</div><h3 class="heading-md">Invite someone you trust.</h3></div><button id="close-invite-modal" class="modal-close">×</button></div><p class="subtext" style="font-size:.86rem;margin-bottom:1.25rem;">Share a unique link with family, friends, or neighbors so they can join your response circle.</p><div class="form-group"><label class="form-label">Invite link</label><div style="display:flex;gap:.5rem;"><input type="text" id="invite-link-input" class="form-input" readonly value="" style="font-size:.8rem;"><button id="btn-copy-invite-modal" class="btn tide-button dark">Copy</button></div></div><button id="btn-open-add-contact-direct" class="btn tide-button ghost btn-full">+ Add person directly</button></div></div>
+
+  <!-- 1. Location Selection Modal -->
+  <div id="location-modal" class="modal-backdrop">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 class="heading-md">Select Monitoring Location</h3>
+        <button id="close-location-modal" style="font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+      </div>
+      
+      <div class="form-group" style="position: relative;">
+        <input type="text" id="modal-search-input" class="form-input" placeholder="Search city, area or pincode (e.g. Hazratganj)...">
+        <div id="modal-search-results" class="card" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 10; margin-top: 4px; padding: 0.5rem 0; max-height: 200px; overflow-y: auto;"></div>
+      </div>
+
+      <button id="modal-gps-btn" class="btn btn-secondary btn-full" style="margin-bottom: 1.5rem;">
+        ⊕ Use my current GPS location
+      </button>
+
+      <p class="label-caps" style="margin-bottom: 0.5rem;">QUICK LOCATIONS</p>
+      <div class="card" style="padding: 0; max-height: 220px; overflow-y: auto;">
+        <div class="modal-quick-loc" data-name="Lucknow, Uttar Pradesh" data-lat="26.8467" data-lng="80.9462" style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer;">📍 Lucknow, Uttar Pradesh</div>
+        <div class="modal-quick-loc" data-name="Guwahati, Assam" data-lat="26.1445" data-lng="91.7362" style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer;">📍 Guwahati, Assam</div>
+        <div class="modal-quick-loc" data-name="Silchar, Assam" data-lat="24.8333" data-lng="92.7789" style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer;">📍 Silchar, Assam</div>
+        <div class="modal-quick-loc" data-name="New Delhi, Delhi" data-lat="28.6139" data-lng="77.2090" style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer;">📍 New Delhi</div>
+        <div class="modal-quick-loc" data-name="Mumbai, Maharashtra" data-lat="19.0760" data-lng="72.8777" style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer;">📍 Mumbai, Maharashtra</div>
+        <div class="modal-quick-loc" data-name="Kolkata, West Bengal" data-lat="22.5726" data-lng="88.3639" style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer;">📍 Kolkata, West Bengal</div>
+        <div class="modal-quick-loc" data-name="Patna, Bihar" data-lat="25.5941" data-lng="85.1376" style="padding: 0.75rem 1rem; cursor: pointer;">📍 Patna, Bihar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Add / Edit Contact Modal -->
+  <div id="add-contact-modal" class="modal-backdrop">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 class="heading-md" id="contact-modal-title">Add Emergency Contact</h3>
+        <button id="close-contact-modal" style="font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+      </div>
+
+      <form id="add-contact-form">
+        <input type="hidden" id="contact-edit-id" value="">
+        <div class="form-group">
+          <label class="form-label" for="contact-name">Full Name</label>
+          <input type="text" id="contact-name" class="form-input" placeholder="e.g. Robert Johnson" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="contact-relation">Relationship</label>
+          <input type="text" id="contact-relation" class="form-input" placeholder="e.g. Father, Spouse, Friend" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="contact-phone">Phone Number</label>
+          <input type="tel" id="contact-phone" class="form-input" placeholder="+91 98765 11111" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="contact-email">Email (Optional)</label>
+          <input type="email" id="contact-email" class="form-input" placeholder="contact@example.com">
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" id="contact-submit-btn" style="margin-top: 1rem;">Save Contact</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. SOS Confirmation & Status Modal -->
+  <div id="sos-modal" class="modal-backdrop">
+    <div class="modal-content" style="text-align: center; max-width: 440px;">
+      <div style="font-size: 3rem; margin-bottom: 0.5rem;">🚨</div>
+      <h3 class="heading-md" style="margin-bottom: 0.5rem; color: var(--accent-red);">CONFIRM EMERGENCY SOS</h3>
+      <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">
+        You are about to send an emergency alert with your live location (<strong id="sos-modal-location">Lucknow</strong>) to all registered emergency contacts.
+      </p>
+
+      <div style="background: #FFF9F5; border: 1px dashed var(--accent-red); border-radius: var(--radius-sm); padding: 0.75rem; margin-bottom: 1.5rem; font-size: 0.82rem; color: var(--text-secondary);">
+        ⚡ Text messages and app alerts will be sent right away.
+      </div>
+
+      <div style="display: flex; gap: 0.75rem;">
+        <button id="btn-cancel-sos" class="btn btn-secondary btn-full">Cancel</button>
+        <button id="btn-confirm-sos" class="btn btn-danger btn-full">Confirm & Send SOS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Safety Circle Invite & Add Person Modal -->
+  <div id="invite-modal" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 480px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 class="heading-md">Invite to Safety Circle</h3>
+        <button id="close-invite-modal" style="font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+      </div>
+
+      <p class="subtext" style="font-size: 0.9rem; margin-bottom: 1.25rem;">
+        Share this unique invite link with family, friends, or neighbors so they can join your safety circle and receive live flood alerts.
+      </p>
+
+      <div class="form-group">
+        <label class="form-label">Unique Invite Link</label>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="text" id="invite-link-input" class="form-input" readonly value="" style="font-size: 0.85rem;">
+          <button id="btn-copy-invite-modal" class="btn btn-primary" style="white-space: nowrap;">Copy Link</button>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; text-align: center; margin: 1.25rem 0; color: var(--text-muted); font-size: 0.85rem;">
+        <span style="flex:1; border-bottom:1px solid var(--border);"></span>
+        <span style="padding: 0 0.75rem;">or add directly</span>
+        <span style="flex:1; border-bottom:1px solid var(--border);"></span>
+      </div>
+
+      <button id="btn-open-add-contact-direct" class="btn btn-secondary btn-full">
+        + Add Person / Contact Directly
+      </button>
+    </div>
+  </div>
 
   <script src="../js/services/api.js?v=20260821-3"></script>
   <script src="../js/services/auth.service.js"></script>
   <script src="../js/pages/dashboard.js?v=20260821-3"></script>
+
 </body>
 </html>
+

@@ -11,8 +11,8 @@ const server = http.createServer(app);
 mongoose.set('bufferCommands', false);
 
 // Start Server Immediately
-server.listen(PORT, () => {
-  console.log(`[SERVER] FloodSAHAAY backend listening on http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`[SERVER] FloodSAHAAY backend listening on port ${PORT}`);
 });
 
 // Connect to MongoDB asynchronously
